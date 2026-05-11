@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname, useRouter } from "next/navigation";
 import { Check, RotateCcw, Play, X, EyeOff } from "lucide-react";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { useTourSafe } from "./tour-provider";
 import { TOUR_STEPS, TOUR_EDIT_URL_KEY, type TourStep } from "./tour-steps";
 
@@ -29,6 +30,8 @@ export function TourChecklist({ open, onClose }: TourChecklistProps) {
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
 
   useEffect(() => setMounted(true), []);
 
@@ -96,7 +99,7 @@ export function TourChecklist({ open, onClose }: TourChecklistProps) {
       <div className="px-4 py-3 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-foreground">
-            Getting Started
+            {isZh ? "新手引导" : "Getting Started"}
           </h3>
           <button
             onClick={onClose}
@@ -109,7 +112,7 @@ export function TourChecklist({ open, onClose }: TourChecklistProps) {
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-muted-foreground">
-              {progress}% complete
+              {isZh ? `已完成 ${progress}%` : `${progress}% complete`}
             </span>
           </div>
           <div className="mt-1.5 h-1.5 w-full rounded-full bg-muted">
@@ -149,7 +152,7 @@ export function TourChecklist({ open, onClose }: TourChecklistProps) {
                         : "text-muted-foreground/70"
                   }
                 >
-                  {step.title}
+                  {isZh && step.titleZh ? step.titleZh : step.title}
                 </span>
               </li>
             );
@@ -164,14 +167,14 @@ export function TourChecklist({ open, onClose }: TourChecklistProps) {
                 className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors"
               >
                 <RotateCcw className="h-3 w-3" />
-                Restart
+                {isZh ? "重新开始" : "Restart"}
               </button>
               <button
                 onClick={handleContinue}
                 className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 <Play className="h-3 w-3" />
-                Continue
+                {isZh ? "继续" : "Continue"}
               </button>
             </div>
             <button
@@ -179,7 +182,7 @@ export function TourChecklist({ open, onClose }: TourChecklistProps) {
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               <EyeOff className="h-3 w-3" />
-              Dismiss tour
+              {isZh ? "关闭引导" : "Dismiss tour"}
             </button>
           </div>
         ) : (
@@ -189,7 +192,7 @@ export function TourChecklist({ open, onClose }: TourChecklistProps) {
               className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted transition-colors"
             >
               <RotateCcw className="h-3 w-3" />
-              Restart Tour
+              {isZh ? "重新引导" : "Restart Tour"}
             </button>
           </div>
         )}

@@ -16,6 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { AI_TONES, FOLLOW_UP_DEPTHS, LANGUAGES } from "@/lib/constants";
 import { trpc } from "@/lib/trpc/client";
 import {
@@ -62,6 +63,8 @@ export default function SettingsTab() {
   const { interview, interviewId, updateMutation } = useEditInterview();
   const { toast } = useToast();
   const utils = trpc.useUtils();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
 
   const publishMutation = trpc.interview.publish.useMutation();
 
@@ -324,14 +327,14 @@ export default function SettingsTab() {
               <SelectContent>
                 {AI_TONES.map((t) => (
                   <SelectItem key={t.value} value={t.value}>
-                    {t.label}
+                    {isZh ? t.labelZh : t.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Follow-up Depth</Label>
+            <Label>{isZh ? "追问深度" : "Follow-up Depth"}</Label>
             <Select value={followUpDepth} onValueChange={setFollowUpDepth}>
               <SelectTrigger>
                 <SelectValue />
@@ -339,14 +342,14 @@ export default function SettingsTab() {
               <SelectContent>
                 {FOLLOW_UP_DEPTHS.map((d) => (
                   <SelectItem key={d.value} value={d.value}>
-                    {d.label} ({d.description})
+                    {isZh ? `${d.labelZh}（${d.descriptionZh}）` : `${d.label} (${d.description})`}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Language</Label>
+            <Label>{isZh ? "语言" : "Language"}</Label>
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger>
                 <SelectValue />
@@ -354,7 +357,7 @@ export default function SettingsTab() {
               <SelectContent>
                 {LANGUAGES.map((l) => (
                   <SelectItem key={l.value} value={l.value}>
-                    {l.label}
+                    {isZh ? l.labelZh : l.label}
                   </SelectItem>
                 ))}
               </SelectContent>

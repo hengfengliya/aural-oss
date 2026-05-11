@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { useTourSafe } from "./tour-provider";
 import { TOUR_STEPS } from "./tour-steps";
 
@@ -34,6 +35,8 @@ export function TourOverlay() {
   const tour = useTourSafe();
   const router = useRouter();
   const pathname = usePathname();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number }>({
     top: 0,
@@ -326,19 +329,19 @@ export function TourOverlay() {
           <div className="p-5 space-y-3">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                Step {idx + 1} of {total}
+                {isZh ? `第 ${idx + 1} / ${total} 步` : `Step ${idx + 1} of ${total}`}
               </span>
             </div>
             <h3 className="text-[15px] font-bold text-gray-900 leading-tight">
-              {step.title}
+              {isZh && step.titleZh ? step.titleZh : step.title}
             </h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              {renderDescription(step.description)}
+              {renderDescription(isZh && step.descriptionZh ? step.descriptionZh : step.description)}
             </p>
             <div className="pt-1">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[11px] font-medium text-gray-500">
-                  {Math.round(((idx + 1) / total) * 100)}% complete
+                  {isZh ? `已完成 ${Math.round(((idx + 1) / total) * 100)}%` : `${Math.round(((idx + 1) / total) * 100)}% complete`}
                 </span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-gray-200">
@@ -353,7 +356,7 @@ export function TourOverlay() {
                 onClick={tour.skip}
                 className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
               >
-                Skip tour
+                {isZh ? "跳过引导" : "Skip tour"}
               </button>
               <div className="flex gap-2">
                 {idx > 0 && (
@@ -361,7 +364,7 @@ export function TourOverlay() {
                     onClick={handleBack}
                     className="inline-flex items-center rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                   >
-                    Back
+                    {isZh ? "上一步" : "Back"}
                   </button>
                 )}
                 <button
@@ -369,7 +372,7 @@ export function TourOverlay() {
                   disabled={!isLast && !inputFilled && idx >= maxStep}
                   className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {isLast ? "Finish" : "Next"}
+                  {isLast ? (isZh ? "完成" : "Finish") : (isZh ? "下一步" : "Next")}
                 </button>
               </div>
             </div>

@@ -359,7 +359,7 @@ export default function NewInterviewPage() {
                         <SelectContent>
                           {AI_TONES.map((t) => (
                             <SelectItem key={t.value} value={t.value}>
-                              {t.label}
+                              {isZh ? t.labelZh : t.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -379,7 +379,7 @@ export default function NewInterviewPage() {
                         <SelectContent>
                           {FOLLOW_UP_DEPTHS.map((d) => (
                             <SelectItem key={d.value} value={d.value}>
-                              {d.label} ({d.description})
+                              {isZh ? `${d.labelZh}（${d.descriptionZh}）` : `${d.label} (${d.description})`}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -394,7 +394,7 @@ export default function NewInterviewPage() {
                         <SelectContent>
                           {LANGUAGES.map((l) => (
                             <SelectItem key={l.value} value={l.value}>
-                              {l.label}
+                              {isZh ? l.labelZh : l.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
