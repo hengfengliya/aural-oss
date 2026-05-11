@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppLocale } from "@/components/app-locale-provider";
 import { QUESTION_TYPE_STYLES, QuestionCard } from "@/components/interview/question-card";
 import { useOrg } from "@/components/org-provider";
 import { AiButton } from "@/components/ui/ai-button";
@@ -252,10 +253,104 @@ const PROMPT_TEMPLATES: PromptTemplate[] = [
   },
 ];
 
+const PROMPT_TEMPLATES_ZH: PromptTemplate[] = [
+  {
+    label: "销售顾问",
+    icon: Briefcase,
+    segments: [
+      "为焕贞美容门诊招聘 ",
+      h("销售顾问"),
+      "，出 ",
+      h("8"),
+      " 道题，覆盖 ",
+      h("开放型 + 单选 + 案例"),
+      " 类型，重点考察 ",
+      h("销售技巧、客户沟通、成交转化能力"),
+      "。",
+    ],
+  },
+  {
+    label: "美容师",
+    icon: Users,
+    segments: [
+      "招聘 ",
+      h("美容师 / 治疗师"),
+      "，出 ",
+      h("6"),
+      " 道题，混合 ",
+      h("开放型和单选"),
+      "，考察 ",
+      h("专业操作、服务意识、卫生与安全规范"),
+      "。",
+    ],
+  },
+  {
+    label: "行为面试",
+    icon: MessageSquareText,
+    segments: [
+      "进行 ",
+      h("行为面试"),
+      "，出 ",
+      h("6"),
+      " 道题，混合 ",
+      h("开放型和单选"),
+      " 题型，评估 ",
+      h("责任心、团队协作、压力下处理冲突的能力"),
+      "。",
+    ],
+  },
+  {
+    label: "初筛电话",
+    icon: Briefcase,
+    segments: [
+      "设计一场 ",
+      h("初筛电话"),
+      "，出 ",
+      h("5"),
+      " 道题，混合 ",
+      h("开放型和单选"),
+      "，快速评估 ",
+      h("基础专业能力和沟通表达"),
+      "。",
+    ],
+  },
+  {
+    label: "案例分析",
+    icon: BrainCircuit,
+    segments: [
+      "设计一场 ",
+      h("案例分析面试"),
+      "，出 ",
+      h("4"),
+      " 道题，包含 ",
+      h("白板、多选、开放型"),
+      " 综合问题分析。",
+    ],
+  },
+  {
+    label: "用户调研",
+    icon: Search,
+    segments: [
+      "进行 ",
+      h("用户调研访谈"),
+      "，出 ",
+      h("6"),
+      " 道 ",
+      h("开放型"),
+      " 题目，了解 ",
+      h("产品使用习惯、痛点和未被满足的需求"),
+      "。",
+    ],
+  },
+];
+
 export function AIGenerator({ projectId }: { projectId?: string } = {}) {
   const router = useRouter();
   const { toast } = useToast();
   const { currentOrg } = useOrg();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
   const [description, setDescription] = useState("");
   const [activeTemplate, setActiveTemplate] = useState<number | null>(null);
   const [hlRanges, setHlRanges] = useState<HLRange[]>([]);
@@ -468,7 +563,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
           : undefined,
       })));
     } catch {
-      toast({ title: "Generation failed", description: "Please try again or create the interview manually.", variant: "destructive" });
+      toast({ title: tt("Generation failed", "生成失败"), description: tt("Please try again or create the interview manually.", "请重试，或手动创建面试。"), variant: "destructive" });
     } finally {
       setGenerating(false);
       setStreamPhase("idle");
@@ -521,9 +616,9 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
       setFeedback("");
       setEditingIndex(null);
       setEditingCriterionIndex(null);
-      toast({ title: "Interview refined based on your feedback!" });
+      toast({ title: tt("Interview refined based on your feedback!", "已根据你的反馈优化面试！") });
     } catch {
-      toast({ title: "Refinement failed", description: "Please try again.", variant: "destructive" });
+      toast({ title: tt("Refinement failed", "优化失败"), description: tt("Please try again.", "请重试。"), variant: "destructive" });
     } finally {
       setRefining(false);
       setStreamPhase("idle");
@@ -569,11 +664,11 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
         )
       );
 
-      toast({ title: "Interview created!" });
+      toast({ title: tt("Interview created!", "面试已创建！") });
       router.push(`/interviews/${interview.id}/edit/sessions`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong";
-      toast({ title: "Error saving interview", description: message, variant: "destructive" });
+      const message = err instanceof Error ? err.message : tt("Something went wrong", "出现错误");
+      toast({ title: tt("Error saving interview", "保存面试失败"), description: message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -673,16 +768,18 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
-            AI Interview Generator
+            {tt("AI Interview Generator", "AI 面试生成器")}
           </CardTitle>
           <CardDescription>
-            Describe your goal in natural language and AI will create a complete
-            interview structure for you.
+            {tt(
+              "Describe your goal in natural language and AI will create a complete interview structure for you.",
+              "用自然语言描述你的目标，AI 会为你生成完整的面试结构。",
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2" data-tour="interview-prompt">
-            <Label htmlFor="ai-description">What kind of interview do you need?</Label>
+            <Label htmlFor="ai-description">{tt("What kind of interview do you need?", "想做什么样的面试？")}</Label>
             {(() => {
               const segments = hlRanges.length ? segmentsFromRanges(description, hlRanges) : null;
               const hasHL = segments?.some((s) => typeof s !== "string") ?? false;
@@ -700,7 +797,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                         {jdLoading && (
                           <span className="inline-flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5 text-xs text-muted-foreground">
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            Extracting JD...
+                            {tt("Extracting JD...", "正在提取职位描述...")}
                           </span>
                         )}
                         {jdText && (
@@ -721,7 +818,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                         {resumeLoading && (
                           <span className="inline-flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5 text-xs text-muted-foreground">
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            Extracting resume...
+                            {tt("Extracting resume...", "正在提取简历...")}
                           </span>
                         )}
                         {resumeText && (
@@ -744,7 +841,10 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                     <div className="relative">
                       <Textarea
                         id="ai-description"
-                        placeholder="e.g. I want to assess senior React developers for our fintech startup, focusing on system design and problem-solving skills..."
+                        placeholder={tt(
+                          "e.g. I want to assess senior React developers for our fintech startup, focusing on system design and problem-solving skills...",
+                          "例如：我想为焕贞美容门诊招聘有 3 年以上经验的销售顾问，重点考察销售技巧和客户沟通能力...",
+                        )}
                         value={description}
                         onChange={(e) => {
                           const next = e.target.value;
@@ -795,7 +895,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                             )}
                           >
                             {jdLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Briefcase className="h-3.5 w-3.5" />}
-                            JD
+                            {tt("JD", "职位描述")}
                           </button>
                         </PopoverTrigger>
                         <PopoverContent align="end" className="w-64 p-2">
@@ -806,11 +906,11 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                               onClick={() => { setJdText(""); setJdSource(""); setJdUrlInput(""); setJdError(""); setJdPopoverOpen(false); }}
                             >
                               <X className="h-4 w-4" />
-                              Remove JD
+                              {tt("Remove JD", "移除职位描述")}
                             </button>
                           ) : (
                             <div className="space-y-1.5">
-                              <label className="block px-1 text-xs font-medium text-muted-foreground">Paste JD link</label>
+                              <label className="block px-1 text-xs font-medium text-muted-foreground">{tt("Paste JD link", "粘贴职位描述链接")}</label>
                               <div className="flex items-center gap-1.5 rounded-md border bg-muted/50 px-2 py-1.5">
                                 <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                                 <input
@@ -834,7 +934,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                               </div>
                               <div className="relative">
                                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t" /></div>
-                                <div className="relative flex justify-center"><span className="bg-popover px-2 text-xs text-muted-foreground">or</span></div>
+                                <div className="relative flex justify-center"><span className="bg-popover px-2 text-xs text-muted-foreground">{tt("or", "或")}</span></div>
                               </div>
                               <button
                                 type="button"
@@ -842,7 +942,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                                 onClick={() => { jdFileRef.current?.click(); setJdPopoverOpen(false); }}
                               >
                                 <FileText className="h-4 w-4" />
-                                Upload PDF
+                                {tt("Upload PDF", "上传 PDF")}
                               </button>
                             </div>
                           )}
@@ -862,19 +962,19 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                             )}
                           >
                             {resumeLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
-                            Resume
+                            {tt("Resume", "简历")}
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                           {resumeText ? (
                             <DropdownMenuItem onClick={() => { setResumeText(""); setResumeSource(""); setResumeError(""); }}>
                               <X className="mr-2 h-4 w-4" />
-                              Remove Resume
+                              {tt("Remove Resume", "移除简历")}
                             </DropdownMenuItem>
                           ) : (
                             <DropdownMenuItem onClick={() => resumeFileRef.current?.click()}>
                               <FileText className="mr-2 h-4 w-4" />
-                              Upload PDF
+                              {tt("Upload PDF", "上传 PDF")}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -883,7 +983,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
 
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {PROMPT_TEMPLATES.map((t, i) => (
+                    {(isZh ? PROMPT_TEMPLATES_ZH : PROMPT_TEMPLATES).map((t, i) => (
                       <button
                         key={t.label}
                         type="button"
@@ -912,7 +1012,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="duration">Duration (min)</Label>
+              <Label htmlFor="duration">{tt("Duration (min)", "时长（分钟）")}</Label>
               <Input
                 id="duration"
                 type="number"
@@ -923,7 +1023,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
               />
             </div>
             <div className="space-y-2">
-              <Label>Language</Label>
+              <Label>{tt("Language", "语言")}</Label>
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger>
                   <SelectValue />
@@ -938,7 +1038,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Tone</Label>
+              <Label>{tt("Tone", "AI 语气")}</Label>
               <Select value={aiTone} onValueChange={(v) => setAiTone(v as typeof aiTone)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -953,7 +1053,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Follow-up Depth</Label>
+              <Label>{tt("Follow-up Depth", "追问深度")}</Label>
               <Select value={followUpDepth} onValueChange={(v) => setFollowUpDepth(v as typeof followUpDepth)}>
                 <SelectTrigger>
                   <SelectValue />
@@ -969,14 +1069,14 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Communication Channels</Label>
+            <Label>{tt("Communication Channels", "沟通渠道")}</Label>
             <div className="space-y-2 rounded-lg border p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MessageSquareText className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <Label>Chat</Label>
-                    <p className="text-xs text-muted-foreground">Text messaging</p>
+                    <Label>{tt("Chat", "聊天")}</Label>
+                    <p className="text-xs text-muted-foreground">{tt("Text messaging", "文字消息")}</p>
                   </div>
                 </div>
                 <Switch
@@ -992,8 +1092,8 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                 <div className="flex items-center gap-2">
                   <Mic className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <Label>Voice</Label>
-                    <p className="text-xs text-muted-foreground">Speech conversation</p>
+                    <Label>{tt("Voice", "语音")}</Label>
+                    <p className="text-xs text-muted-foreground">{tt("Speech conversation", "语音对话")}</p>
                   </div>
                 </div>
                 <Switch
@@ -1010,8 +1110,8 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                 <div className="flex items-center gap-2">
                   <Video className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <Label>Video</Label>
-                    <p className="text-xs text-muted-foreground">Camera &amp; screen recording</p>
+                    <Label>{tt("Video", "视频")}</Label>
+                    <p className="text-xs text-muted-foreground">{tt("Camera & screen recording", "摄像头与屏幕录制")}</p>
                   </div>
                 </div>
                 <Switch
@@ -1023,15 +1123,18 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Anti-Cheating Mode</Label>
+            <Label>{tt("Anti-Cheating Mode", "反作弊模式")}</Label>
             <div className="rounded-lg border p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <Label>Enable Anti-Cheating</Label>
+                    <Label>{tt("Enable Anti-Cheating", "启用反作弊")}</Label>
                     <p className="text-xs text-muted-foreground">
-                      Requires camera, mic & screen sharing. Monitors tab switches, blocks external paste, and detects multiple screens
+                      {tt(
+                        "Requires camera, mic & screen sharing. Monitors tab switches, blocks external paste, and detects multiple screens",
+                        "需要摄像头、麦克风和屏幕共享。监控标签页切换、阻止外部粘贴、检测多屏设备",
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1042,15 +1145,15 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
               </div>
               {antiCheatingEnabled && (
                 <div className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-                  <p className="font-medium">When enabled, interviewees will experience:</p>
+                  <p className="font-medium">{tt("When enabled, interviewees will experience:", "启用后，候选人将经历：")}</p>
                   <ul className="mt-1 list-inside list-disc space-y-0.5">
-                    <li>Camera, microphone, and screen sharing will be mandatory (cannot be skipped)</li>
-                    <li>Tab switching and window focus loss will be tracked and flagged</li>
-                    <li>Pasting content from outside the interview page will be blocked</li>
-                    <li>Multiple monitor setups will be detected and warned against</li>
+                    <li>{tt("Camera, microphone, and screen sharing will be mandatory (cannot be skipped)", "强制开启摄像头、麦克风和屏幕共享（不可跳过）")}</li>
+                    <li>{tt("Tab switching and window focus loss will be tracked and flagged", "切换标签页或窗口失焦将被记录并标记")}</li>
+                    <li>{tt("Pasting content from outside the interview page will be blocked", "禁止从面试页面外粘贴内容")}</li>
+                    <li>{tt("Multiple monitor setups will be detected and warned against", "检测到多显示器将给出警告")}</li>
                   </ul>
                   <p className="mt-1.5 text-amber-700 dark:text-amber-300">
-                    Candidates will be informed of these restrictions before starting.
+                    {tt("Candidates will be informed of these restrictions before starting.", "候选人将在开始前被告知这些限制。")}
                   </p>
                 </div>
               )}
@@ -1067,11 +1170,11 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
             {!generating && <Sparkles className="mr-2 h-4 w-4" />}
             {generating
               ? streamPhase === "thinking"
-                ? "Thinking..."
+                ? tt("Thinking...", "思考中...")
                 : streamPhase === "writing"
-                  ? "Writing..."
-                  : "Generating..."
-              : "Generate Interview"}
+                  ? tt("Writing...", "撰写中...")
+                  : tt("Generating...", "生成中...")
+              : tt("Generate Interview", "生成面试")}
           </AiButton>
         </CardContent>
       </Card>
@@ -1087,7 +1190,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                   {streamPhase === "thinking" && (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   )}
-                  <span>{streamPhase === "thinking" ? "Thinking..." : "Thinking complete"}</span>
+                  <span>{streamPhase === "thinking" ? tt("Thinking...", "思考中...") : tt("Thinking complete", "思考完成")}</span>
                 </div>
                 <div
                   ref={thinkingRef}
@@ -1109,7 +1212,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                   {streamPhase === "writing" && (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   )}
-                  <span>{streamPhase === "writing" ? "Writing interview..." : "Finalizing..."}</span>
+                  <span>{streamPhase === "writing" ? tt("Writing interview...", "撰写面试...") : tt("Finalizing...", "整理中...")}</span>
                 </div>
                 <div ref={contentRef} className="max-h-40 overflow-y-auto rounded-md bg-muted/50 px-3 py-2 code-scrollbar">
                   <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
@@ -1130,15 +1233,15 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
             <CardTitle>{result.title}</CardTitle>
             <CardDescription>{result.objective}</CardDescription>
             <div className="flex gap-2 pt-2">
-              {chatEnabled && <Badge>Chat</Badge>}
-              {voiceEnabled && <Badge>Voice</Badge>}
-              {videoEnabled && <Badge>Video</Badge>}
+              {chatEnabled && <Badge>{tt("Chat", "聊天")}</Badge>}
+              {voiceEnabled && <Badge>{tt("Voice", "语音")}</Badge>}
+              {videoEnabled && <Badge>{tt("Video", "视频")}</Badge>}
               <Badge variant="outline">{aiTone}</Badge>
               <Badge variant="secondary">
-                ~{result.estimatedDurationMinutes} min
+                {tt(`~${result.estimatedDurationMinutes} min`, `约 ${result.estimatedDurationMinutes} 分钟`)}
               </Badge>
               <Badge variant="secondary">
-                {editableQuestions.length} questions
+                {tt(`${editableQuestions.length} questions`, `${editableQuestions.length} 道题`)}
               </Badge>
             </div>
           </CardHeader>
@@ -1147,7 +1250,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
             <div className="space-y-3">
               <Label className="flex items-center gap-1.5 text-sm font-medium">
                 <ListOrdered className="h-4 w-4" />
-                Questions ({editableQuestions.length})
+                {tt(`Questions (${editableQuestions.length})`, `题目（${editableQuestions.length}）`)}
               </Label>
               <div className="space-y-1">
                 {editableQuestions.map((q, i) => (
@@ -1190,7 +1293,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                   className="flex-1 border-dashed"
                 >
                   <Plus className="mr-1 h-3.5 w-3.5" />
-                  Add New
+                  {tt("Add New", "添加新题")}
                 </Button>
                 <Button
                   variant="outline"
@@ -1199,7 +1302,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                   onClick={() => setImportOpen(true)}
                 >
                   <Copy className="mr-1 h-3.5 w-3.5" />
-                  Import Existing
+                  {tt("Import Existing", "导入已有")}
                 </Button>
               </div>
             </div>
@@ -1216,7 +1319,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                     order: prev.length + i + 1,
                   })),
                 ]);
-                toast({ title: `${imported.length} question${imported.length > 1 ? "s" : ""} imported` });
+                toast({ title: tt(`${imported.length} question${imported.length > 1 ? "s" : ""} imported`, `已导入 ${imported.length} 道题`) });
               }}
               existingTexts={editableQuestions.map((q) => q.text)}
             />
@@ -1228,12 +1331,12 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
             <div className="space-y-3">
               <Label className="flex items-center gap-1.5 text-sm font-medium">
                 <Target className="h-4 w-4" />
-                Assessment Criteria ({editableCriteria.length})
+                {tt(`Assessment Criteria (${editableCriteria.length})`, `评分标准（${editableCriteria.length}）`)}
               </Label>
               <div className="space-y-1.5">
                 {editableCriteria.length === 0 ? (
                   <p className="py-2 text-sm text-muted-foreground">
-                    No assessment criteria defined yet.
+                    {tt("No assessment criteria defined yet.", "尚未定义评分标准。")}
                   </p>
                 ) : (
                   editableCriteria.map((c, i) => (
@@ -1247,7 +1350,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                                 prev.map((cr, idx) => idx === i ? { ...cr, name: e.target.value } : cr)
                               )
                             }
-                            placeholder="Criterion name..."
+                            placeholder={tt("Criterion name...", "标准名称...")}
                             className="h-8 text-sm font-medium"
                             autoFocus
                           />
@@ -1258,7 +1361,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                                 prev.map((cr, idx) => idx === i ? { ...cr, description: e.target.value } : cr)
                               )
                             }
-                            placeholder="What this criterion measures..."
+                            placeholder={tt("What this criterion measures...", "此标准衡量什么...")}
                             rows={2}
                             className="resize-y text-sm"
                           />
@@ -1271,18 +1374,21 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                                   className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                                 >
                                   <Trash2 className="mr-1 h-3 w-3" />
-                                  Delete
+                                  {tt("Delete", "删除")}
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete criterion?</AlertDialogTitle>
+                                  <AlertDialogTitle>{tt("Delete criterion?", "删除评分标准？")}</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This will permanently remove this assessment criterion. This action cannot be undone.
+                                    {tt(
+                                      "This will permanently remove this assessment criterion. This action cannot be undone.",
+                                      "将永久删除此评分标准，操作不可撤销。",
+                                    )}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
                                   <AlertDialogAction
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     onClick={() => {
@@ -1291,7 +1397,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                                       criterionSnapshotRef.current = null;
                                     }}
                                   >
-                                    Delete
+                                    {tt("Delete", "删除")}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -1318,14 +1424,14 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                               }}
                             >
                               <X className="mr-1 h-3 w-3" />
-                              Cancel
+                              {tt("Cancel", "取消")}
                             </Button>
                             <Button size="sm" onClick={() => {
                               criterionSnapshotRef.current = null;
                               setEditingCriterionIndex(null);
                             }}>
                               <Check className="mr-1 h-3 w-3" />
-                              Done
+                              {tt("Done", "完成")}
                             </Button>
                           </div>
                         </div>
@@ -1365,13 +1471,16 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete criterion?</AlertDialogTitle>
+                                  <AlertDialogTitle>{tt("Delete criterion?", "删除评分标准？")}</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    This will permanently remove this assessment criterion. This action cannot be undone.
+                                    {tt(
+                                      "This will permanently remove this assessment criterion. This action cannot be undone.",
+                                      "将永久删除此评分标准，操作不可撤销。",
+                                    )}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
                                   <AlertDialogAction
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     onClick={() => {
@@ -1380,7 +1489,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                                       criterionSnapshotRef.current = null;
                                     }}
                                   >
-                                    Delete
+                                    {tt("Delete", "删除")}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
@@ -1402,7 +1511,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                 }}
               >
                 <Plus className="mr-1 h-3 w-3" />
-                Add Criterion
+                {tt("Add Criterion", "添加评分标准")}
               </Button>
             </div>
 
@@ -1413,15 +1522,21 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
             <div className="space-y-2 rounded-lg border bg-muted/30 p-4">
               <Label className="flex items-center gap-1.5 text-sm font-medium">
                 <MessageSquareText className="h-4 w-4" />
-                Refine with AI
+                {tt("Refine with AI", "用 AI 优化")}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Describe what you&apos;d like to change and AI will update the questions.
+                {tt(
+                  "Describe what you'd like to change and AI will update the questions.",
+                  "描述你希望修改的内容，AI 会更新题目。",
+                )}
               </p>
               <Textarea
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder='e.g. "Make the questions harder", "Add more behavioral questions", "Remove the ice-breaker"...'
+                placeholder={tt(
+                  'e.g. "Make the questions harder", "Add more behavioral questions", "Remove the ice-breaker"...',
+                  '例如："把题目难度提高一些"、"多加几道行为面试题"、"去掉破冰问题"...',
+                )}
                 rows={2}
                 className="resize-none bg-background"
               />
@@ -1435,11 +1550,11 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                 {!refining && <Sparkles className="mr-2 h-3.5 w-3.5" />}
                 {refining
                   ? streamPhase === "thinking"
-                    ? "Thinking..."
+                    ? tt("Thinking...", "思考中...")
                     : streamPhase === "writing"
-                      ? "Writing..."
-                      : "Refining..."
-                  : "Refine Questions"}
+                      ? tt("Writing...", "撰写中...")
+                      : tt("Refining...", "优化中...")
+                  : tt("Refine Questions", "优化题目")}
               </AiButton>
 
               {/* Refine streaming display */}
@@ -1452,7 +1567,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                           {streamPhase === "thinking" && (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           )}
-                          <span>{streamPhase === "thinking" ? "Thinking..." : "Thinking complete"}</span>
+                          <span>{streamPhase === "thinking" ? tt("Thinking...", "思考中...") : tt("Thinking complete", "思考完成")}</span>
                         </div>
                         <div
                           ref={thinkingRef}
@@ -1473,7 +1588,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                           {streamPhase === "writing" && (
                             <Loader2 className="h-3 w-3 animate-spin" />
                           )}
-                          <span>{streamPhase === "writing" ? "Writing interview..." : "Finalizing..."}</span>
+                          <span>{streamPhase === "writing" ? tt("Writing interview...", "撰写面试...") : tt("Finalizing...", "整理中...")}</span>
                         </div>
                         <div ref={contentRef} className="max-h-40 overflow-y-auto rounded-md bg-muted/50 px-3 py-2 code-scrollbar">
                           <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
@@ -1496,7 +1611,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                 ) : (
                   <Check className="mr-2 h-4 w-4" />
                 )}
-                Accept & Create
+                {tt("Accept & Create", "确认并创建")}
               </Button>
               <Button
                 variant="outline"
@@ -1504,7 +1619,7 @@ export function AIGenerator({ projectId }: { projectId?: string } = {}) {
                 disabled={generating}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Regenerate All
+                {tt("Regenerate All", "全部重新生成")}
               </Button>
             </div>
           </CardContent>
@@ -1529,6 +1644,9 @@ function ImportDialog({
   onImport: (questions: GeneratedQuestion[]) => void;
   existingTexts: string[];
 }) {
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -1596,9 +1714,12 @@ function ImportDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import Existing Questions</DialogTitle>
+          <DialogTitle>{tt("Import Existing Questions", "导入已有题目")}</DialogTitle>
           <DialogDescription>
-            Select questions from your existing interviews to add here.
+            {tt(
+              "Select questions from your existing interviews to add here.",
+              "从已有面试中选择题目添加到这里。",
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -1606,7 +1727,7 @@ function ImportDialog({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search questions..."
+              placeholder={tt("Search questions...", "搜索题目...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -1621,8 +1742,8 @@ function ImportDialog({
             ) : filteredQuestions.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
                 {search.trim()
-                  ? "No questions match your search."
-                  : "No questions available to import."}
+                  ? tt("No questions match your search.", "没有匹配的题目。")
+                  : tt("No questions available to import.", "暂无可导入的题目。")}
               </p>
             ) : (
               <div className="divide-y">
@@ -1668,14 +1789,14 @@ function ImportDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>
-            Cancel
+            {tt("Cancel", "取消")}
           </Button>
           <Button
             onClick={handleImport}
             disabled={selectedIds.size === 0}
           >
             <Copy className="mr-2 h-4 w-4" />
-            Import ({selectedIds.size})
+            {tt(`Import (${selectedIds.size})`, `导入 (${selectedIds.size})`)}
           </Button>
         </DialogFooter>
       </DialogContent>
