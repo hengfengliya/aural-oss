@@ -42,6 +42,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { useToast } from "@/hooks/use-toast";
 import { exportToXlsx } from "@/lib/export-xlsx";
 import { getSessionOverallScore } from "@/lib/session-score";
@@ -407,6 +408,52 @@ export function CandidateManager({
 }: CandidateManagerProps) {
   const { toast } = useToast();
   const utils = trpc.useUtils();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
+  const columnLabel: Record<string, string> = {
+    name: tt("Name", "姓名"),
+    email: tt("Email", "邮箱"),
+    phone: tt("Phone", "电话"),
+    gender: tt("Gender", "性别"),
+    birthday: tt("Birthday", "生日"),
+    education: tt("Education", "学历"),
+    school: tt("School", "学校"),
+    major: tt("Major", "专业"),
+    gradYear: tt("Grad Year", "毕业年份"),
+    experience: tt("Experience", "经验"),
+    notes: tt("Notes", "备注"),
+    created: tt("Created", "创建时间"),
+    score: tt("Score", "分数"),
+    duration: tt("Duration", "时长"),
+    started: tt("Started", "开始时间"),
+    finished: tt("Finished", "结束时间"),
+    source: tt("Source", "来源"),
+    status: tt("Status", "状态"),
+  };
+  const timeRangeLabel: Record<string, string> = {
+    ALL: tt("All Time", "全部时间"),
+    "1d": tt("Past 1 day", "过去 1 天"),
+    "3d": tt("Past 3 days", "过去 3 天"),
+    "7d": tt("Past 7 days", "过去 7 天"),
+    "14d": tt("Past 14 days", "过去 14 天"),
+    "30d": tt("Past 30 days", "过去 30 天"),
+    "90d": tt("Past 90 days", "过去 90 天"),
+  };
+  const statusBadgeLabel = (s: string) => {
+    if (!isZh) {
+      return s === "Not Started" ? "NOT STARTED" : s.replace("_", " ");
+    }
+    switch (s) {
+      case "COMPLETED": return "已完成";
+      case "IN_PROGRESS": return "进行中";
+      case "ABANDONED": return "已放弃";
+      case "Not Started": return "未开始";
+      default: return s;
+    }
+  };
+  const sourceBadge = (type: "walkin" | "candidate") =>
+    type === "walkin" ? tt("Walk-in", "现场") : tt("Invited", "邀请");
 
   // ── State ──
   const [searchQuery, setSearchQuery] = useState("");
@@ -517,7 +564,7 @@ export function CandidateManager({
     onSuccess: () => invalidateAll(),
     onError: (err) => {
       toast({
-        title: "Failed to remove sessions",
+        title: tt("Failed to remove sessions", "删除会话失败"),
         description: err.message,
         variant: "destructive",
       });
@@ -527,7 +574,7 @@ export function CandidateManager({
     onSuccess: () => invalidateAll(),
     onError: (err) => {
       toast({
-        title: "Failed to remove sessions",
+        title: tt("Failed to remove sessions", "删除会话失败"),
         description: err.message,
         variant: "destructive",
       });
@@ -543,7 +590,7 @@ export function CandidateManager({
     (inviteToken: string) => {
       const link = `${window.location.origin}/i/invite/${inviteToken}`;
       navigator.clipboard.writeText(link);
-      toast({ title: "Invite link copied!" });
+      toast({ title: tt("Invite link copied!", "邀请链接已复制！") });
     },
     [toast],
   );
@@ -735,68 +782,65 @@ export function CandidateManager({
       for (const col of exportCols) {
         switch (col.key) {
           case "name":
-            record[col.label] = row.name || "";
+            record[columnLabel[col.key] ?? col.label] = row.name || "";
             break;
           case "email":
-            record[col.label] = row.email || "";
+            record[columnLabel[col.key] ?? col.label] = row.email || "";
             break;
           case "phone":
-            record[col.label] = c?.phone || "";
+            record[columnLabel[col.key] ?? col.label] = c?.phone || "";
             break;
           case "gender":
-            record[col.label] = c?.gender || "";
+            record[columnLabel[col.key] ?? col.label] = c?.gender || "";
             break;
           case "birthday":
-            record[col.label] = c?.birthday || "";
+            record[columnLabel[col.key] ?? col.label] = c?.birthday || "";
             break;
           case "education":
-            record[col.label] = c?.education || "";
+            record[columnLabel[col.key] ?? col.label] = c?.education || "";
             break;
           case "school":
-            record[col.label] = c?.school || "";
+            record[columnLabel[col.key] ?? col.label] = c?.school || "";
             break;
           case "major":
-            record[col.label] = c?.major || "";
+            record[columnLabel[col.key] ?? col.label] = c?.major || "";
             break;
           case "gradYear":
-            record[col.label] = c?.graduationYear ?? "";
+            record[columnLabel[col.key] ?? col.label] = c?.graduationYear ?? "";
             break;
           case "experience":
-            record[col.label] = c?.workExperience || "";
+            record[columnLabel[col.key] ?? col.label] = c?.workExperience || "";
             break;
           case "notes":
-            record[col.label] = c?.notes || "";
+            record[columnLabel[col.key] ?? col.label] = c?.notes || "";
             break;
           case "created":
-            record[col.label] = c?.createdAt ? formatDate(c.createdAt) : "";
+            record[columnLabel[col.key] ?? col.label] = c?.createdAt ? formatDate(c.createdAt) : "";
             break;
           case "score": {
             const sv = getSessionScore(row);
-            record[col.label] = sv !== null ? Number(sv.toFixed(1)) : "";
+            record[columnLabel[col.key] ?? col.label] = sv !== null ? Number(sv.toFixed(1)) : "";
             break;
           }
           case "duration":
-            record[col.label] = hasSession
+            record[columnLabel[col.key] ?? col.label] = hasSession
               ? formatDuration(session.totalDurationSeconds)
               : "";
             break;
           case "started":
-            record[col.label] = hasSession ? formatDate(getStartDate(row)) : "";
+            record[columnLabel[col.key] ?? col.label] = hasSession ? formatDate(getStartDate(row)) : "";
             break;
           case "finished":
-            record[col.label] =
+            record[columnLabel[col.key] ?? col.label] =
               hasSession && session.completedAt
                 ? formatDate(session.completedAt)
                 : "";
             break;
           case "source":
-            record[col.label] = row.type === "walkin" ? "Walk-in" : "Invited";
+            record[columnLabel[col.key] ?? col.label] = sourceBadge(row.type);
             break;
           case "status":
-            record[col.label] =
-              status === "Not Started"
-                ? "NOT STARTED"
-                : status.replace("_", " ");
+            record[columnLabel[col.key] ?? col.label] = statusBadgeLabel(status);
             break;
         }
       }
@@ -819,7 +863,7 @@ export function CandidateManager({
           <CardContent className="flex items-center gap-4 p-6">
             <Users className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Total Sessions</p>
+              <p className="text-sm text-muted-foreground">{tt("Total Sessions", "会话总数")}</p>
               <p className="text-2xl font-bold">{totalCandidates}</p>
             </div>
           </CardContent>
@@ -828,7 +872,7 @@ export function CandidateManager({
           <CardContent className="flex items-center gap-4 p-6">
             <UserCheck className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Completed</p>
+              <p className="text-sm text-muted-foreground">{tt("Completed", "已完成")}</p>
               <p className="text-2xl font-bold">{completedCount}</p>
             </div>
           </CardContent>
@@ -837,7 +881,7 @@ export function CandidateManager({
           <CardContent className="flex items-center gap-4 p-6">
             <Clock className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Avg Duration</p>
+              <p className="text-sm text-muted-foreground">{tt("Avg Duration", "平均时长")}</p>
               <p className="text-2xl font-bold">
                 {insights.data?.avgDurationSeconds
                   ? `${Math.round(insights.data.avgDurationSeconds / 60)}m`
@@ -853,7 +897,7 @@ export function CandidateManager({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name or email..."
+            placeholder={tt("Search by name or email...", "按姓名或邮箱搜索…")}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -877,7 +921,7 @@ export function CandidateManager({
           <SelectContent>
             {TIME_RANGE_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+                {timeRangeLabel[opt.value] ?? opt.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -895,10 +939,10 @@ export function CandidateManager({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All Status</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-            <SelectItem value="NOT_STARTED">Not Started</SelectItem>
+            <SelectItem value="ALL">{tt("All Status", "全部状态")}</SelectItem>
+            <SelectItem value="COMPLETED">{tt("Completed", "已完成")}</SelectItem>
+            <SelectItem value="IN_PROGRESS">{tt("In Progress", "进行中")}</SelectItem>
+            <SelectItem value="NOT_STARTED">{tt("Not Started", "未开始")}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -908,7 +952,7 @@ export function CandidateManager({
           disabled={processedRows.length === 0}
         >
           <Download className="mr-2 h-4 w-4" />
-          Export
+          {tt("Export", "导出")}
         </Button>
 
         {/* Bulk actions / Import+Add */}
@@ -924,11 +968,11 @@ export function CandidateManager({
               ) : (
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
-              Delete ({selectedIds.size})
+              {isZh ? `删除（${selectedIds.size}）` : `Delete (${selectedIds.size})`}
             </Button>
             <Button variant="outline" onClick={() => setSelectedIds(new Set())}>
               <X className="mr-1 h-4 w-4" />
-              Cancel
+              {tt("Cancel", "取消")}
             </Button>
           </>
         ) : (
@@ -936,7 +980,7 @@ export function CandidateManager({
             <DropdownMenuTrigger asChild>
               <Button data-tour="add-session">
                 <Plus className="mr-2 h-4 w-4" />
-                Add
+                {tt("Add", "添加")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -945,15 +989,15 @@ export function CandidateManager({
                 onClick={() => setCreateOpen(true)}
               >
                 <UserPlus className="mr-2 h-4 w-4" />
-                Create individually
+                {tt("Create individually", "单个添加")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setImportOpen(true)}>
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
-                Import by Excel
+                {tt("Import by Excel", "用 Excel 批量导入")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setResumeImportOpen(true)}>
                 <FileText className="mr-2 h-4 w-4" />
-                Import by resumes
+                {tt("Import by resumes", "用简历导入")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -969,8 +1013,11 @@ export function CandidateManager({
         ) : processedRows.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
             {isFiltering
-              ? "No sessions match your filters."
-              : "No sessions yet. Add sessions individually or import them in bulk."}
+              ? tt("No sessions match your filters.", "没有符合筛选条件的会话。")
+              : tt(
+                  "No sessions yet. Add sessions individually or import them in bulk.",
+                  "暂无会话。可以逐个添加，也可以批量导入。",
+                )}
           </p>
         ) : (
           <>
@@ -995,7 +1042,7 @@ export function CandidateManager({
                           className="inline-flex cursor-pointer items-center gap-1 select-none whitespace-nowrap hover:text-foreground"
                           onClick={() => handleSort("name")}
                         >
-                          Name
+                          {columnLabel.name}
                           {sortKey === "name" ? (
                             sortDir === "asc" ? (
                               <ArrowUp className="h-3.5 w-3.5" />
@@ -1018,7 +1065,7 @@ export function CandidateManager({
                         col.sortKey ? (
                           <SortableHead
                             key={col.key}
-                            label={col.label}
+                            label={columnLabel[col.key] ?? col.label}
                             sortKey={col.sortKey}
                             activeKey={sortKey}
                             direction={sortDir}
@@ -1029,7 +1076,7 @@ export function CandidateManager({
                             key={col.key}
                             className="whitespace-nowrap"
                           >
-                            {col.label}
+                            {columnLabel[col.key] ?? col.label}
                           </TableHead>
                         ),
                       )}
@@ -1073,7 +1120,7 @@ export function CandidateManager({
                                       if (!draggingCol) toggleColumn(col.key);
                                     }}
                                   >
-                                    {col.label}
+                                    {columnLabel[col.key] ?? col.label}
                                   </span>
                                   {visibleColumns.has(col.key) && (
                                     <Check className="h-4 w-4 shrink-0 text-primary" />
@@ -1192,14 +1239,14 @@ export function CandidateManager({
                             variant="secondary"
                             className="whitespace-nowrap text-xs"
                           >
-                            Walk-in
+                            {sourceBadge("walkin")}
                           </Badge>
                         ) : (
                           <Badge
                             variant="outline"
                             className="whitespace-nowrap border-transparent bg-primary/5 text-xs text-primary"
                           >
-                            Invited
+                            {sourceBadge("candidate")}
                           </Badge>
                         ),
                       status: (
@@ -1207,9 +1254,7 @@ export function CandidateManager({
                           variant={getSessionBadgeVariant(status)}
                           className="whitespace-nowrap"
                         >
-                          {status === "Not Started"
-                            ? "NOT STARTED"
-                            : status.replace("_", " ")}
+                          {statusBadgeLabel(status)}
                         </Badge>
                       ),
                     };
@@ -1266,7 +1311,7 @@ export function CandidateManager({
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              title="View report"
+                              title={tt("View report", "查看报告")}
                               onClick={() => onViewSession(session.id)}
                             >
                               <ClipboardList className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1276,7 +1321,7 @@ export function CandidateManager({
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              title="Copy invite link"
+                              title={tt("Copy invite link", "复制邀请链接")}
                               data-tour="copy-link"
                               onClick={() =>
                                 handleCopyInviteLink(row.inviteToken!)
@@ -1297,7 +1342,7 @@ export function CandidateManager({
             {processedRows.length > PAGE_SIZE_OPTIONS[0] && (
               <div className="flex items-center justify-between border-t px-4 py-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>Rows per page</span>
+                  <span>{tt("Rows per page", "每页行数")}</span>
                   <select
                     className="rounded border bg-background px-2 py-1 text-sm"
                     value={pageSize}
@@ -1315,7 +1360,7 @@ export function CandidateManager({
                   <span className="ml-2">
                     {safePage * pageSize + 1}–
                     {Math.min((safePage + 1) * pageSize, processedRows.length)}{" "}
-                    of {processedRows.length}
+                    {tt("of", "/ 共")} {processedRows.length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1351,16 +1396,15 @@ export function CandidateManager({
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Sessions</AlertDialogTitle>
+            <AlertDialogTitle>{tt("Delete Sessions", "删除会话")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedIds.size} session
-              {selectedIds.size > 1 ? "s" : ""}? This will permanently remove
-              the selected entries and any associated data. This action cannot
-              be undone.
+              {isZh
+                ? `确认要删除 ${selectedIds.size} 个会话吗？这会永久移除所选记录及其关联数据，操作不可撤销。`
+                : `Are you sure you want to delete ${selectedIds.size} session${selectedIds.size > 1 ? "s" : ""}? This will permanently remove the selected entries and any associated data. This action cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
@@ -1368,7 +1412,7 @@ export function CandidateManager({
                 setConfirmDelete(false);
               }}
             >
-              Delete
+              {tt("Delete", "删除")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

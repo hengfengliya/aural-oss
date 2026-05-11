@@ -16,7 +16,9 @@ export const categories: DocCategory[] = [
   {
     slug: "getting-started",
     title: "Getting Started",
+    titleZh: "快速上手",
     description: "Learn the basics of Aural and set up your first interview",
+    descriptionZh: "了解 Aural 的基本用法，搭建你的第一场面试",
     iconName: "Rocket",
     audience: "both",
     order: 1,
@@ -24,7 +26,9 @@ export const categories: DocCategory[] = [
   {
     slug: "creating-interviews",
     title: "Creating Interviews",
+    titleZh: "创建面试",
     description: "Design interviews with AI or build them manually",
+    descriptionZh: "用 AI 生成面试，或手动搭建",
     iconName: "PenTool",
     audience: "creators",
     order: 2,
@@ -32,7 +36,9 @@ export const categories: DocCategory[] = [
   {
     slug: "managing-candidates",
     title: "Managing Candidates",
+    titleZh: "管理候选人",
     description: "Add candidates, share links, and track sessions",
+    descriptionZh: "添加候选人、分享链接、跟踪会话",
     iconName: "Users",
     audience: "creators",
     order: 3,
@@ -40,7 +46,9 @@ export const categories: DocCategory[] = [
   {
     slug: "taking-an-interview",
     title: "Taking an Interview",
+    titleZh: "参加面试",
     description: "Guide for interviewees on voice, chat, and video sessions",
+    descriptionZh: "候选人参加语音、文字与视频面试的指南",
     iconName: "Mic",
     audience: "interviewees",
     order: 4,
@@ -48,7 +56,9 @@ export const categories: DocCategory[] = [
   {
     slug: "results-analytics",
     title: "Results & Analytics",
+    titleZh: "结果与分析",
     description: "Review transcripts, AI insights, and export reports",
+    descriptionZh: "查看对话记录、AI 洞察并导出报告",
     iconName: "BarChart3",
     audience: "creators",
     order: 5,
@@ -56,7 +66,9 @@ export const categories: DocCategory[] = [
   {
     slug: "teams-organizations",
     title: "Teams & Organizations",
+    titleZh: "团队与组织",
     description: "Collaborate with your team and manage projects",
+    descriptionZh: "与团队协作并管理项目",
     iconName: "Building2",
     audience: "creators",
     order: 6,
@@ -64,7 +76,9 @@ export const categories: DocCategory[] = [
   {
     slug: "account-security",
     title: "Account & Security",
+    titleZh: "账户与安全",
     description: "Manage your profile, password, and data privacy",
+    descriptionZh: "管理个人资料、密码与数据隐私",
     iconName: "Shield",
     audience: "both",
     order: 8,
@@ -72,7 +86,9 @@ export const categories: DocCategory[] = [
   {
     slug: "troubleshooting",
     title: "Troubleshooting",
+    titleZh: "故障排查",
     description: "Fix common issues with audio, video, and connectivity",
+    descriptionZh: "修复音频、视频与连接的常见问题",
     iconName: "Wrench",
     audience: "both",
     order: 9,
@@ -80,7 +96,9 @@ export const categories: DocCategory[] = [
   {
     slug: "faq",
     title: "FAQ",
+    titleZh: "常见问题",
     description: "Answers to frequently asked questions",
+    descriptionZh: "常见问题的答案",
     iconName: "HelpCircle",
     audience: "both",
     order: 10,

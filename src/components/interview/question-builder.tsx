@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { useToast } from "@/hooks/use-toast";
 import { trpc } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,9 @@ export function QuestionBuilder({
 }) {
   const { toast } = useToast();
   const utils = trpc.useUtils();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
 
   // Inline editing state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -97,7 +101,7 @@ export function QuestionBuilder({
     onSuccess: () => {
       utils.interview.getById.invalidate({ id: interviewId });
       setAddingNew(false);
-      toast({ title: "Question added" });
+      toast({ title: tt("Question added", "题目已添加") });
     },
   });
 
@@ -105,7 +109,7 @@ export function QuestionBuilder({
     onSuccess: () => {
       utils.interview.getById.invalidate({ id: interviewId });
       setEditingId(null);
-      toast({ title: "Question updated" });
+      toast({ title: tt("Question updated", "题目已更新") });
     },
   });
 
@@ -113,7 +117,7 @@ export function QuestionBuilder({
     onSuccess: () => {
       utils.interview.getById.invalidate({ id: interviewId });
       setEditingId(null);
-      toast({ title: "Question deleted" });
+      toast({ title: tt("Question deleted", "题目已删除") });
     },
   });
 
@@ -125,7 +129,7 @@ export function QuestionBuilder({
     },
     onError: () => {
       setOptimisticOrder(null);
-      toast({ title: "Failed to reorder", variant: "destructive" });
+      toast({ title: tt("Failed to reorder", "排序失败"), variant: "destructive" });
     },
   });
 
@@ -134,7 +138,7 @@ export function QuestionBuilder({
       utils.interview.getById.invalidate({ id: interviewId });
       setCriteriaChanged(false);
       setSavingCriteria(false);
-      toast({ title: "Assessment criteria saved" });
+      toast({ title: tt("Assessment criteria saved", "评分维度已保存") });
     },
     onError: () => {
       setSavingCriteria(false);
@@ -214,7 +218,7 @@ export function QuestionBuilder({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ListOrdered className="h-4 w-4" />
-            Questions ({questions.length})
+            {tt("Questions", "题目")} ({questions.length})
             {reordering && (
               <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
             )}
@@ -224,9 +228,9 @@ export function QuestionBuilder({
           {displayQuestions.length === 0 && !addingNew && (
             <div className="py-8 text-center">
               <MessageSquare className="mx-auto h-10 w-10 text-muted-foreground/50" />
-              <h3 className="mt-3 text-sm font-semibold">No questions yet</h3>
+              <h3 className="mt-3 text-sm font-semibold">{tt("No questions yet", "暂无题目")}</h3>
               <p className="text-xs text-muted-foreground">
-                Add your first question to get started.
+                {tt("Add your first question to get started.", "添加第一道题开始吧。")}
               </p>
             </div>
           )}
@@ -308,7 +312,7 @@ export function QuestionBuilder({
                 onClick={() => setAddingNew(true)}
               >
                 <Plus className="mr-1 h-3.5 w-3.5" />
-                Add New
+                {tt("Add New", "添加题目")}
               </Button>
               <Button
                 variant="outline"
@@ -317,7 +321,7 @@ export function QuestionBuilder({
                 onClick={() => setImportOpen(true)}
               >
                 <Copy className="mr-1 h-3.5 w-3.5" />
-                Import Existing
+                {tt("Import Existing", "导入已有")}
               </Button>
             </div>
           )}
@@ -332,7 +336,7 @@ export function QuestionBuilder({
         existingQuestionTexts={questions.map((q) => q.text)}
         onImported={() => {
           utils.interview.getById.invalidate({ id: interviewId });
-          toast({ title: "Questions imported" });
+          toast({ title: tt("Questions imported", "题目已导入") });
         }}
       />
 
@@ -342,7 +346,7 @@ export function QuestionBuilder({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Target className="h-4 w-4" />
-              Assessment Criteria
+              {tt("Assessment Criteria", "评分维度")}
             </CardTitle>
             {criteriaChanged && (
               <Button
@@ -355,7 +359,7 @@ export function QuestionBuilder({
                 ) : (
                   <Check className="mr-1 h-3 w-3" />
                 )}
-                Save Criteria
+                {tt("Save Criteria", "保存维度")}
               </Button>
             )}
           </div>
@@ -363,7 +367,10 @@ export function QuestionBuilder({
         <CardContent className="space-y-3">
           {editableCriteria.length === 0 && editingCriterionIndex === null && (
             <p className="py-4 text-center text-sm text-muted-foreground">
-              No assessment criteria defined. Add criteria to evaluate participants.
+              {tt(
+                "No assessment criteria defined. Add criteria to evaluate participants.",
+                "尚未定义评分维度，添加维度来评估候选人。",
+              )}
             </p>
           )}
           {editableCriteria.map((c, i) => (
@@ -383,7 +390,7 @@ export function QuestionBuilder({
                       );
                       setCriteriaChanged(true);
                     }}
-                    placeholder="Criterion name..."
+                    placeholder={tt("Criterion name...", "维度名称…")}
                     className="h-8 text-sm font-medium"
                     autoFocus
                   />
@@ -397,7 +404,7 @@ export function QuestionBuilder({
                       );
                       setCriteriaChanged(true);
                     }}
-                    placeholder="What this criterion measures..."
+                    placeholder={tt("What this criterion measures...", "这个维度衡量什么…")}
                     rows={2}
                     className="resize-y text-sm"
                   />
@@ -410,18 +417,21 @@ export function QuestionBuilder({
                           className="border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="mr-1 h-3 w-3" />
-                          Delete
+                          {tt("Delete", "删除")}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete criterion?</AlertDialogTitle>
+                          <AlertDialogTitle>{tt("Delete criterion?", "删除该维度？")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will permanently remove this assessment criterion. This action cannot be undone.
+                            {tt(
+                              "This will permanently remove this assessment criterion. This action cannot be undone.",
+                              "这会永久移除该评分维度，操作不可撤销。",
+                            )}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
                           <AlertDialogAction
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             onClick={() => {
@@ -433,7 +443,7 @@ export function QuestionBuilder({
                               setCriteriaChanged(true);
                             }}
                           >
-                            Delete
+                            {tt("Delete", "删除")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -486,12 +496,12 @@ export function QuestionBuilder({
                     <p className="text-sm font-medium">
                       {c.name || (
                         <span className="italic text-muted-foreground">
-                          Untitled criterion
+                          {tt("Untitled criterion", "未命名维度")}
                         </span>
                       )}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {c.description || "No description"}
+                      {c.description || tt("No description", "暂无描述")}
                     </p>
                   </div>
                   <div className="flex flex-col gap-1 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
@@ -518,13 +528,16 @@ export function QuestionBuilder({
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete criterion?</AlertDialogTitle>
+                          <AlertDialogTitle>{tt("Delete criterion?", "删除该维度？")}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will permanently remove this assessment criterion. This action cannot be undone.
+                            {tt(
+                              "This will permanently remove this assessment criterion. This action cannot be undone.",
+                              "这会永久移除该评分维度，操作不可撤销。",
+                            )}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
                           <AlertDialogAction
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             onClick={() => {
@@ -536,7 +549,7 @@ export function QuestionBuilder({
                               setCriteriaChanged(true);
                             }}
                           >
-                            Delete
+                            {tt("Delete", "删除")}
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
@@ -560,7 +573,7 @@ export function QuestionBuilder({
             }}
           >
             <Plus className="mr-1 h-3.5 w-3.5" />
-            Add Criterion
+            {tt("Add Criterion", "添加维度")}
           </Button>
         </CardContent>
       </Card>
@@ -585,6 +598,9 @@ function ImportQuestionsDialog({
   existingQuestionTexts: string[];
   onImported: () => void;
 }) {
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [importing, setImporting] = useState(false);
@@ -661,9 +677,12 @@ function ImportQuestionsDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import Existing Questions</DialogTitle>
+          <DialogTitle>{tt("Import Existing Questions", "导入已有题目")}</DialogTitle>
           <DialogDescription>
-            Select questions from your other interviews to add to this one.
+            {tt(
+              "Select questions from your other interviews to add to this one.",
+              "从其它面试中选择题目添加到本场。",
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -671,7 +690,7 @@ function ImportQuestionsDialog({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search questions..."
+              placeholder={tt("Search questions...", "搜索题目…")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
@@ -686,8 +705,8 @@ function ImportQuestionsDialog({
             ) : filteredQuestions.length === 0 ? (
               <p className="py-8 text-center text-sm text-muted-foreground">
                 {search.trim()
-                  ? "No questions match your search."
-                  : "No questions available to import."}
+                  ? tt("No questions match your search.", "没有符合搜索的题目。")
+                  : tt("No questions available to import.", "没有可导入的题目。")}
               </p>
             ) : (
               <div className="divide-y">
@@ -716,7 +735,7 @@ function ImportQuestionsDialog({
                             className={cn("text-[10px]", style.badgeClass)}
                           >
                             <TypeIcon className="mr-0.5 h-2.5 w-2.5" />
-                            {style.label}
+                            {isZh ? style.labelZh : style.label}
                           </Badge>
                           <span className="text-xs text-muted-foreground">
                             {q.interview.title}
@@ -733,7 +752,7 @@ function ImportQuestionsDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => handleClose(false)}>
-            Cancel
+            {tt("Cancel", "取消")}
           </Button>
           <Button
             onClick={handleImport}
@@ -744,7 +763,7 @@ function ImportQuestionsDialog({
             ) : (
               <Copy className="mr-2 h-4 w-4" />
             )}
-            Import ({selectedIds.size})
+            {isZh ? `导入（${selectedIds.size}）` : `Import (${selectedIds.size})`}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppLocale } from "@/components/app-locale-provider";
 import { Button } from "@/components/ui/button";
 import {
     Popover,
@@ -20,6 +21,8 @@ export function IntervieweeHelpPopover({
 }: {
   mode: "voice" | "chat";
 }) {
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
   const items = mode === "voice" ? getVoiceGuideItems() : getChatGuideItems();
   const [index, setIndex] = useState(0);
 
@@ -33,7 +36,7 @@ export function IntervieweeHelpPopover({
           variant="ghost"
           size="icon"
           className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          title="How It Works"
+          title={isZh ? "使用说明" : "How It Works"}
         >
           <HelpCircle className="h-4 w-4" />
         </Button>
@@ -46,9 +49,9 @@ export function IntervieweeHelpPopover({
         {/* Header with inline navigation */}
         <div className="flex items-center justify-between px-4 py-3">
           <div>
-            <h4 className="text-sm font-semibold">Interface Guide</h4>
+            <h4 className="text-sm font-semibold">{isZh ? "界面引导" : "Interface Guide"}</h4>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {index + 1} of {items.length}
+              {isZh ? `第 ${index + 1} 步 / 共 ${items.length} 步` : `${index + 1} of ${items.length}`}
             </p>
           </div>
           <div className="flex items-center gap-1">

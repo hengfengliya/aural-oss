@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Rocket,
@@ -12,6 +14,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import type { DocCategory } from "@/content/docs/types";
+import { useAppLocale } from "@/components/app-locale-provider";
 
 const iconMap: Record<string, React.ElementType> = {
   Rocket,
@@ -34,6 +37,8 @@ export function CategoryCard({
   articleCount: number;
 }) {
   const Icon = iconMap[category.iconName] ?? HelpCircle;
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
 
   return (
     <Link
@@ -44,13 +49,13 @@ export function CategoryCard({
         <Icon size={20} className="text-mk-terracotta" />
       </div>
       <h3 className="font-heading text-base font-bold text-mk-text mb-1.5">
-        {category.title}
+        {isZh && category.titleZh ? category.titleZh : category.title}
       </h3>
       <p className="text-sm text-mk-text-secondary leading-relaxed mb-3 flex-1">
-        {category.description}
+        {isZh && category.descriptionZh ? category.descriptionZh : category.description}
       </p>
       <span className="text-xs text-mk-text-muted">
-        {articleCount} {articleCount === 1 ? "article" : "articles"}
+        {articleCount} {isZh ? "篇文档" : articleCount === 1 ? "article" : "articles"}
       </span>
     </Link>
   );

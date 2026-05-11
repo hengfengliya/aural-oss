@@ -688,7 +688,6 @@ export default function QuestionsPage() {
             {processedQuestions.length > PAGE_SIZE_OPTIONS[0] && (
               <div className="flex items-center justify-between border-t px-4 py-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>Rows per page</span>
                   <span>{isZh ? "每页行数" : "Rows per page"}</span>
                   <select
                     className="rounded border bg-background px-2 py-1 text-sm"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppLocale } from "@/components/app-locale-provider";
 import { cn } from "@/lib/utils";
 import {
     Code2,
@@ -15,7 +16,9 @@ import {
 
 interface GuideItem {
   title: string;
+  titleZh?: string;
   description: string;
+  descriptionZh?: string;
   illustration: React.ReactNode;
 }
 
@@ -229,38 +232,56 @@ export function getVoiceGuideItems(): GuideItem[] {
   return [
     {
       title: "Your AI Interviewer",
+      titleZh: "AI 面试官",
       description:
         "The center area shows the AI interviewer status. It speaks to you and listens to your responses in real time.",
+      descriptionZh:
+        "中间区域显示 AI 面试官的状态。它会实时说话并听取你的回答。",
       illustration: <VoiceAreaIllustration />,
     },
     {
       title: "Microphone Control",
+      titleZh: "麦克风",
       description:
         "Click the mic button to mute or unmute. Speak naturally when unmuted — the AI will respond automatically.",
+      descriptionZh:
+        "点击麦克风按钮静音或取消静音。开麦后正常说话，AI 会自动回应。",
       illustration: <MicControlIllustration />,
     },
     {
       title: "Text Chat Channel",
+      titleZh: "文字通道",
       description:
         "Prefer typing? Toggle the chat panel to send text messages alongside the voice conversation.",
+      descriptionZh:
+        "想打字？切换聊天面板，可以在语音之外用文字补充。",
       illustration: <ChatChannelIllustration />,
     },
     {
       title: "Whiteboard & Code Editor",
+      titleZh: "白板与代码编辑器",
       description:
         "Use the Whiteboard for diagrams or the Code Editor for coding questions. They open as side panels.",
+      descriptionZh:
+        "用白板画图，或用代码编辑器写代码题。它们会从侧边展开。",
       illustration: <ToolsIllustration />,
     },
     {
       title: "Conversation Transcript",
+      titleZh: "对话记录",
       description:
         "Your full conversation transcript appears on the right. Use it to review what was said.",
+      descriptionZh:
+        "右侧会显示完整对话记录，方便你回看刚刚的内容。",
       illustration: <TranscriptIllustration />,
     },
     {
       title: "Question Navigation",
+      titleZh: "题目导航",
       description:
         "Use Previous/Next to navigate between questions. The progress bar shows how far along you are. Click End when finished.",
+      descriptionZh:
+        "用「上一题/下一题」切换。进度条显示已完成的比例。结束时点「结束」。",
       illustration: <NavigationIllustration />,
     },
   ];
@@ -270,26 +291,38 @@ export function getChatGuideItems(): GuideItem[] {
   return [
     {
       title: "Chat with the AI",
+      titleZh: "和 AI 对话",
       description:
         "Questions appear as chat messages. The AI will guide you through each one and may ask follow-ups based on your answers.",
+      descriptionZh:
+        "题目会以聊天消息形式出现。AI 会逐题引导，可能根据你的回答追问。",
       illustration: <ChatQuestionIllustration />,
     },
     {
       title: "Type Your Response",
+      titleZh: "输入回答",
       description:
         "Type your answer in the text box and press Enter or click Send. Take your time to compose thoughtful responses.",
+      descriptionZh:
+        "在文本框输入回答，按回车或点「发送」。可以慢慢想，写出认真的答案。",
       illustration: <ChatInputIllustration />,
     },
     {
       title: "Whiteboard & Code Editor",
+      titleZh: "白板与代码编辑器",
       description:
         "Use the Whiteboard for diagrams or the Code Editor for coding questions. They appear above the chat area.",
+      descriptionZh:
+        "用白板画图，或用代码编辑器答代码题。它们会显示在聊天区上方。",
       illustration: <ToolsIllustration />,
     },
     {
       title: "Track Your Progress",
+      titleZh: "查看进度",
       description:
         "The progress bar and question counter show how far along you are. Use the back arrow to revisit previous questions.",
+      descriptionZh:
+        "用进度条和题目计数器查看进度。点返回箭头可以回看之前的题目。",
       illustration: <ChatProgressIllustration />,
     },
   ];
@@ -322,6 +355,8 @@ export function GuideStepCard({
   index: number;
   compact?: boolean;
 }) {
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
   return (
     <div className={cn(
       "overflow-hidden rounded-lg",
@@ -337,13 +372,13 @@ export function GuideStepCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className={cn("font-semibold", compact ? "text-xs" : "text-sm")}>
-            {item.title}
+            {isZh && item.titleZh ? item.titleZh : item.title}
           </p>
           <p className={cn(
             "mt-0.5 leading-relaxed text-muted-foreground",
             compact ? "text-[11px]" : "text-xs",
           )}>
-            {item.description}
+            {isZh && item.descriptionZh ? item.descriptionZh : item.description}
           </p>
         </div>
       </div>

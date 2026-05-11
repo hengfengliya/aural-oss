@@ -44,6 +44,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2, Pencil } from "lucide-react";
 
@@ -51,6 +52,19 @@ export default function OrgSettingsMembersPage() {
   const { toast } = useToast();
   const { currentOrg } = useOrg();
   const utils = trpc.useUtils();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
+  const roleLabel = (r: string) => {
+    if (!isZh) return r;
+    switch (r) {
+      case "OWNER": return "所有者";
+      case "ADMIN": return "管理员";
+      case "MEMBER": return "成员";
+      case "VIEWER": return "查看者";
+      default: return r;
+    }
+  };
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -66,25 +80,25 @@ export default function OrgSettingsMembersPage() {
 
   const inviteMutation = trpc.orgMember.invite.useMutation({
     onSuccess: () => {
-      toast({ title: "Member invited" });
+      toast({ title: tt("Member invited", "已邀请成员") });
       setInviteOpen(false);
       setInviteEmail("");
       utils.orgMember.list.invalidate();
     },
     onError: (err) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: tt("Error", "出错了"), description: err.message, variant: "destructive" });
     },
   });
 
   const updateRoleMutation = trpc.orgMember.updateRole.useMutation({
     onSuccess: () => {
-      toast({ title: "Role updated" });
+      toast({ title: tt("Role updated", "角色已更新") });
       setEditingRoleUserId(null);
       utils.orgMember.list.invalidate();
     },
     onError: (err) => {
       toast({
-        title: "Error",
+        title: tt("Error", "出错了"),
         description: err.message,
         variant: "destructive",
       });
@@ -93,12 +107,12 @@ export default function OrgSettingsMembersPage() {
 
   const removeMutation = trpc.orgMember.remove.useMutation({
     onSuccess: () => {
-      toast({ title: "Member removed" });
+      toast({ title: tt("Member removed", "成员已移除") });
       utils.orgMember.list.invalidate();
     },
     onError: (err) => {
       toast({
-        title: "Error",
+        title: tt("Error", "出错了"),
         description: err.message,
         variant: "destructive",
       });
@@ -108,7 +122,7 @@ export default function OrgSettingsMembersPage() {
   if (!currentOrg) {
     return (
       <div className="flex items-center justify-center py-20 text-muted-foreground">
-        No organization selected
+        {tt("No organization selected", "未选择组织")}
       </div>
     );
   }
@@ -132,9 +146,11 @@ export default function OrgSettingsMembersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Members</h2>
+          <h2 className="text-xl font-semibold">{tt("Members", "成员")}</h2>
           <p className="text-sm text-muted-foreground">
-            Manage who has access to &quot;{currentOrg.name}&quot;.
+            {isZh
+              ? `管理可以访问 “${currentOrg.name}” 的成员。`
+              : `Manage who has access to "${currentOrg.name}".`}
           </p>
         </div>
         {isAdmin && (
@@ -142,28 +158,31 @@ export default function OrgSettingsMembersPage() {
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
-                Add member
+                {tt("Add member", "添加成员")}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Invite Member</DialogTitle>
+                <DialogTitle>{tt("Invite Member", "邀请成员")}</DialogTitle>
                 <DialogDescription>
-                  They must have an account to be invited.
+                  {tt(
+                    "They must have an account to be invited.",
+                    "被邀请的人需要已经有账户。",
+                  )}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label>{tt("Email", "邮箱")}</Label>
                   <Input
                     type="email"
-                    placeholder="colleague@company.com"
+                    placeholder={tt("colleague@company.com", "同事邮箱@公司.com")}
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Role</Label>
+                  <Label>{tt("Role", "角色")}</Label>
                   <Select
                     value={inviteRole}
                     onValueChange={(v) =>
@@ -174,9 +193,9 @@ export default function OrgSettingsMembersPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                      <SelectItem value="MEMBER">Member</SelectItem>
-                      <SelectItem value="VIEWER">Viewer</SelectItem>
+                      <SelectItem value="ADMIN">{tt("Admin", "管理员")}</SelectItem>
+                      <SelectItem value="MEMBER">{tt("Member", "成员")}</SelectItem>
+                      <SelectItem value="VIEWER">{tt("Viewer", "查看者")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -186,7 +205,7 @@ export default function OrgSettingsMembersPage() {
                   variant="outline"
                   onClick={() => setInviteOpen(false)}
                 >
-                  Cancel
+                  {tt("Cancel", "取消")}
                 </Button>
                 <Button
                   onClick={() =>
@@ -203,7 +222,7 @@ export default function OrgSettingsMembersPage() {
                   {inviteMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Invite
+                  {tt("Invite", "邀请")}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -216,9 +235,9 @@ export default function OrgSettingsMembersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Organization Role</TableHead>
+                <TableHead>{tt("Name", "姓名")}</TableHead>
+                <TableHead>{tt("Email", "邮箱")}</TableHead>
+                <TableHead>{tt("Organization Role", "组织角色")}</TableHead>
                 {isAdmin && <TableHead className="w-10" />}
               </TableRow>
             </TableHeader>
@@ -272,16 +291,16 @@ export default function OrgSettingsMembersPage() {
                           </SelectTrigger>
                           <SelectContent>
                             {isOwner && (
-                              <SelectItem value="ADMIN">ADMIN</SelectItem>
+                              <SelectItem value="ADMIN">{roleLabel("ADMIN")}</SelectItem>
                             )}
-                            <SelectItem value="MEMBER">MEMBER</SelectItem>
-                            <SelectItem value="VIEWER">VIEWER</SelectItem>
+                            <SelectItem value="MEMBER">{roleLabel("MEMBER")}</SelectItem>
+                            <SelectItem value="VIEWER">{roleLabel("VIEWER")}</SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <Badge variant={roleVariant(m.role)}>
-                            {m.role}
+                            {roleLabel(m.role)}
                           </Badge>
                           {isAdmin && m.role !== "OWNER" && (
                             <button
@@ -309,19 +328,31 @@ export default function OrgSettingsMembersPage() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Remove Member</AlertDialogTitle>
+                                <AlertDialogTitle>{tt("Remove Member", "移除成员")}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to remove{" "}
-                                  <span className="font-medium text-foreground">
-                                    {m.profile?.name ?? m.profile?.email}
-                                  </span>{" "}
-                                  from &quot;{currentOrg.name}&quot;? They will
-                                  lose access to all projects in this
-                                  organization.
+                                  {isZh ? (
+                                    <>
+                                      确认将{" "}
+                                      <span className="font-medium text-foreground">
+                                        {m.profile?.name ?? m.profile?.email}
+                                      </span>{" "}
+                                      从 “{currentOrg.name}” 中移除吗？他们将失去访问该组织所有项目的权限。
+                                    </>
+                                  ) : (
+                                    <>
+                                      Are you sure you want to remove{" "}
+                                      <span className="font-medium text-foreground">
+                                        {m.profile?.name ?? m.profile?.email}
+                                      </span>{" "}
+                                      from &quot;{currentOrg.name}&quot;? They will
+                                      lose access to all projects in this
+                                      organization.
+                                    </>
+                                  )}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
                                 <AlertDialogAction
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   onClick={() =>
@@ -331,7 +362,7 @@ export default function OrgSettingsMembersPage() {
                                     })
                                   }
                                 >
-                                  Remove
+                                  {tt("Remove", "移除")}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

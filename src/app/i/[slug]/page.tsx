@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppLocale } from "@/components/app-locale-provider";
 import { PreparingScreen } from "@/components/session/preparing-screen";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +22,9 @@ export default function PublicInterviewPage() {
   const isPreview = searchParams.get("preview") === "true";
   const sidParam = searchParams.get("sid");
   const { toast } = useToast();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
 
   useEffect(() => {
     if (isPreview && sidParam) {
@@ -68,7 +72,7 @@ export default function PublicInterviewPage() {
     },
     onError: (err) => {
       toast({
-        title: "Failed to start interview",
+        title: tt("Failed to start interview", "面试启动失败"),
         description: err.message,
         variant: "destructive",
       });
@@ -110,10 +114,12 @@ export default function PublicInterviewPage() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
               <Link2Off className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold">Interview Not Available</h2>
+            <h2 className="text-xl font-semibold">{tt("Interview Not Available", "面试不可用")}</h2>
             <p className="text-muted-foreground mt-2">
-              This interview may have been removed or is no longer accepting
-              responses.
+              {tt(
+                "This interview may have been removed or is no longer accepting responses.",
+                "面试可能已被移除，或当前不再接受答题。",
+              )}
             </p>
           </CardContent>
         </Card>
@@ -128,10 +134,12 @@ export default function PublicInterviewPage() {
         <Card className="w-full max-w-md">
           <CardContent className="py-12 text-center">
             <CheckCircle2 className="mx-auto h-16 w-16 text-secondary-500" />
-            <h2 className="mt-4 text-2xl font-bold">Thank you!</h2>
+            <h2 className="mt-4 text-2xl font-bold">{tt("Thank you!", "感谢参与！")}</h2>
             <p className="mt-2 text-muted-foreground">
-              Your interview has been completed successfully. We appreciate your
-              time and thoughtful responses.
+              {tt(
+                "Your interview has been completed successfully. We appreciate your time and thoughtful responses.",
+                "面试已顺利结束，感谢你的时间和用心回答。",
+              )}
             </p>
           </CardContent>
         </Card>
@@ -160,10 +168,12 @@ export default function PublicInterviewPage() {
           {interview.data.requireInvite && !isPreview && !canResume && (
             <div className="py-6 text-center">
               <Lock className="mx-auto h-10 w-10 text-muted-foreground/50" />
-              <p className="mt-3 font-medium">Invite only</p>
+              <p className="mt-3 font-medium">{tt("Invite only", "仅邀请")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                This interview is accessible only through a personal invite link.
-                Please check your email for the link from the interviewer.
+                {tt(
+                  "This interview is accessible only through a personal invite link. Please check your email for the link from the interviewer.",
+                  "本面试仅通过专属邀请链接访问。请到邮箱里查看面试方发送的链接。",
+                )}
               </p>
             </div>
           )}
@@ -173,19 +183,19 @@ export default function PublicInterviewPage() {
             <div className="mb-6 space-y-3">
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
                 <p className="text-sm font-medium">
-                  You have an unfinished interview session.
+                  {tt("You have an unfinished interview session.", "你有一个未完成的面试会话。")}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Pick up right where you left off, or start fresh.
+                  {tt("Pick up right where you left off, or start fresh.", "可以从上次中断的地方继续，或者重新开始。")}
                 </p>
                 <div className="mt-3 flex gap-2">
                   <Button className="flex-1" onClick={handleResume}>
                     <RotateCcw className="mr-2 h-4 w-4" />
-                    Continue Interview
+                    {tt("Continue Interview", "继续面试")}
                   </Button>
                   <Button variant="outline" className="flex-1" onClick={handleStartNew}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Start New
+                    {tt("Start New", "重新开始")}
                   </Button>
                 </div>
               </div>
@@ -207,37 +217,36 @@ export default function PublicInterviewPage() {
             >
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  Your Name <span className="text-destructive">*</span>
+                  {tt("Your Name", "你的姓名")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="name"
                   value={participantName}
                   onChange={(e) => setParticipantName(e.target.value)}
-                  placeholder="Enter your name"
+                  placeholder={tt("Enter your name", "请输入姓名")}
                   required
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  Your Email <span className="text-destructive">*</span>
+                  {tt("Your Email", "你的邮箱")} <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="email"
                   type="email"
                   value={participantEmail}
                   onChange={(e) => setParticipantEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={tt("Enter your email", "请输入邮箱")}
                   required
                 />
               </div>
 
               <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
                 <p>
-                  {interview.data.questions.length} questions &middot;{" "}
+                  {interview.data.questions.length} {tt("questions", "道题")} &middot;{" "}
                   {interview.data.timeLimitMinutes
-                    ? `${interview.data.timeLimitMinutes} min`
-                    : "No time limit"}
-                  
+                    ? `${interview.data.timeLimitMinutes} ${tt("min", "分钟")}`
+                    : tt("No time limit", "不限时")}
                 </p>
               </div>
 
@@ -247,14 +256,20 @@ export default function PublicInterviewPage() {
                     <Mic className="h-4 w-4 text-primary" />
                     <span>
                       {interview.data.chatEnabled
-                        ? "This interview supports voice and text chat"
-                        : "This interview uses voice mode (requires Chrome or Edge)"}
+                        ? tt(
+                            "This interview supports voice and text chat",
+                            "本面试支持语音和文字两种作答方式",
+                          )
+                        : tt(
+                            "This interview uses voice mode (requires Chrome or Edge)",
+                            "本面试使用语音模式（需要 Chrome 或 Edge 浏览器）",
+                          )}
                     </span>
                   </>
                 ) : (
                   <>
                     <MessageSquare className="h-4 w-4 text-primary" />
-                    <span>This interview uses text chat</span>
+                    <span>{tt("This interview uses text chat", "本面试通过文字进行")}</span>
                   </>
                 )}
               </div>
@@ -271,7 +286,7 @@ export default function PublicInterviewPage() {
                 {createSession.isLoading && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Begin Interview
+                {tt("Begin Interview", "开始面试")}
               </Button>
             </form>
           )}

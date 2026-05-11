@@ -38,11 +38,11 @@ import {
 
 type PeriodValue = "last7" | "last30" | "last90" | "thisMonth";
 
-const PERIOD_OPTIONS: { value: PeriodValue; label: string }[] = [
-  { value: "thisMonth", label: "This month" },
-  { value: "last7", label: "Last 7 days" },
-  { value: "last30", label: "Last 30 days" },
-  { value: "last90", label: "Last 90 days" },
+const PERIOD_OPTIONS: { value: PeriodValue; label: string; labelZh: string }[] = [
+  { value: "thisMonth", label: "This month", labelZh: "本月" },
+  { value: "last7", label: "Last 7 days", labelZh: "近 7 天" },
+  { value: "last30", label: "Last 30 days", labelZh: "近 30 天" },
+  { value: "last90", label: "Last 90 days", labelZh: "近 90 天" },
 ];
 
 /* ──────────────────── Helpers ──────────────────── */
@@ -657,7 +657,7 @@ export default function UsagePage() {
           <SelectContent>
             {PERIOD_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+                {isZh ? opt.labelZh : opt.label}
               </SelectItem>
             ))}
           </SelectContent>

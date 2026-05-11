@@ -1,5 +1,5 @@
 import { nanoid } from "@/lib/id";
-import { INTERVIEW_TEMPLATES } from "@/lib/interview-templates";
+import { INTERVIEW_TEMPLATES, pickTemplateLocale } from "@/lib/interview-templates";
 import { getSessionOverallScore } from "@/lib/session-score";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -441,6 +441,7 @@ export const interviewRouter = router({
       z.object({
         templateId: z.string(),
         projectId: z.string().optional(),
+        locale: z.enum(["en", "zh"]).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -451,6 +452,7 @@ export const interviewRouter = router({
           message: "Template not found",
         });
       }
+      const localized = pickTemplateLocale(template, input.locale ?? "en");
 
       const projectId =
         input.projectId ?? (await resolveDefaultProject(ctx.supabase, ctx.user.id));
@@ -496,12 +498,12 @@ export const interviewRouter = router({
       const { data: interview, error } = await ctx.supabase
         .from("interviews")
         .insert({
-          title: template.title,
-          description: template.description,
-          objective: template.objective,
+          title: localized.title,
+          description: localized.description,
+          objective: localized.objective,
           aiTone: template.aiTone,
           followUpDepth: template.followUpDepth,
-          assessmentCriteria: template.assessmentCriteria,
+          assessmentCriteria: localized.assessmentCriteria,
           chatEnabled: template.chatEnabled,
           voiceEnabled: template.voiceEnabled,
           videoEnabled: template.videoEnabled,
@@ -520,8 +522,8 @@ export const interviewRouter = router({
         });
       }
 
-      if (template.questions.length > 0) {
-        const questionRows = template.questions.map((q) => ({
+      if (localized.questions.length > 0) {
+        const questionRows = localized.questions.map((q) => ({
           interviewId: interview.id,
           text: q.text,
           type: q.type,

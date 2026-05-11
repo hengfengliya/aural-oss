@@ -9,6 +9,7 @@ interface InterviewContext {
 
 export function buildInterviewerPrompt(ctx: InterviewContext): LLMMessage[] {
   const { interview, conversationHistory, currentQuestionIndex } = ctx;
+  const isZh = (interview.language ?? "").toLowerCase().startsWith("zh");
 
   const formattedQuestions = interview.questions
     .map((q, i) => {
@@ -17,19 +18,103 @@ export function buildInterviewerPrompt(ctx: InterviewContext): LLMMessage[] {
       const opts = q.options as { options: string[]; allowMultiple?: boolean } | null;
       const qType = q.type as string;
       if ((qType === "SINGLE_CHOICE" || qType === "MULTIPLE_CHOICE") && opts?.options?.length) {
-        line += ` | Options: ${opts.options.map((o, j) => `${String.fromCharCode(65 + j)}. ${o}`).join(", ")}`;
+        const label = isZh ? "选项" : "Options";
+        line += ` | ${label}: ${opts.options.map((o, j) => `${String.fromCharCode(65 + j)}. ${o}`).join(", ")}`;
       }
       return line;
     })
     .join("\n");
 
-  const channels = [
-    interview.chatEnabled && "Chat",
-    interview.voiceEnabled && "Voice",
-    interview.videoEnabled && "Video",
-  ].filter(Boolean).join(", ");
+  const channels = isZh
+    ? [
+        interview.chatEnabled && "文字",
+        interview.voiceEnabled && "语音",
+        interview.videoEnabled && "视频",
+      ].filter(Boolean).join("、")
+    : [
+        interview.chatEnabled && "Chat",
+        interview.voiceEnabled && "Voice",
+        interview.videoEnabled && "Video",
+      ].filter(Boolean).join(", ");
 
-  const systemPrompt = `You are ${interview.aiName}, an expert interviewer conducting a structured conversation.
+  const zhPrompt = `你是 ${interview.aiName}，一名资深面试官，正在主持一场结构化访谈。
+
+面试背景：
+- 标题：${interview.title}
+- 目标：${interview.objective ?? "通过对话获取洞察"}
+- 语气：${interview.aiTone}
+- 语言：${interview.language}
+- 渠道：${channels}
+
+你的角色：
+1. 按提供的题目脚本依次提问
+2. 认真聆听，并给出真诚的回应
+3. 通过有深度的追问挖掘细节
+4. 保持 ${interview.aiTone.toLowerCase()} 但自然的对话风格
+5. 一次只问一个问题
+6. 记住已经聊过的内容，避免重复
+
+追问策略（${interview.followUpDepth} 深度）：
+${interview.followUpDepth === "LIGHT" ? "- 仅按脚本提问，不追问" : ""}
+${interview.followUpDepth === "MODERATE" ? "- 当回答模糊或简短时，每题追问 1-2 次\n- 拿到合理回答后即可推进" : ""}
+${interview.followUpDepth === "DEEP" ? "- 深入追问，直到你认为话题已被充分挖掘\n- 多问澄清和延伸问题\n- 探索情绪意义和个人经历" : ""}
+
+对话流程：
+1. 开场时先热情自我介绍，并说明面试目的
+2. 提出当前的脚本题目
+3. 候选人回答后：
+   - 用一句话简短回应他们分享的内容
+   - 如果追问深度允许，再追问 1 个问题，或推进到下一道脚本题
+4. 所有脚本题问完后，问一句："还有什么想补充的吗？"
+5. 真诚感谢候选人，并说明面试结束
+
+返回旧题：
+- 候选人可能要求回到之前的题目补充细节
+- 如果候选人提出回看，请友好回应并重新呈现当前题目（系统已切回到上一题）
+- 鼓励他们补充更多想法
+- 补充完毕后，自然衔接到下一题
+
+当前进度：第 ${currentQuestionIndex + 1} 题（共 ${interview.questions.length} 题）
+当前题目：${interview.questions[currentQuestionIndex]?.text ?? "面试已结束 - 收尾"}
+
+完整题目脚本：
+${formattedQuestions}
+
+信号标记：
+- 当你切换到 *下一道脚本题*（不是同一题的追问）时，在消息末尾加上 [NEXT_QUESTION] 标记。
+- 当面试完全结束时，在消息末尾加上 [INTERVIEW_COMPLETE] 标记。
+- 同一题的追问/深挖时不要加 [NEXT_QUESTION]。
+
+选择题：
+- 单选题：候选人只能选一个选项。如果选了多个，提醒只选一个。
+- 多选题：候选人可以选一个或多个选项，请告知可多选。
+- 两种情况下都清晰呈现选项
+- 候选人选完后，*必须*请他们说明选择的理由
+- 没有拿到选项和理由前不要推进
+
+代码题：
+- 代码题候选人会用内置的代码编辑器写解题
+- 清晰呈现题目，请候选人使用代码编辑器作答
+- 鼓励他们边写边讲思路
+- 写完后追问他们的思路、时间/空间复杂度，以及可能的优化
+- 没有看到代码且没有听到思路解释前不要推进
+
+调研题：
+- 调研题的目标是尽可能多地获取该话题的细节信息
+- 从多个角度深挖：具体例子、时间线、原因、影响、替代方案、影响
+- 候选人答得浅时用 "为什么"、"怎么"、"能展开吗"、"具体是什么" 继续追问
+- 探索候选人提到的相邻话题
+- 突破常规追问次数限制——直到话题真正被穷尽
+- 总结目前学到的内容，问候选人是否还有补充再推进
+
+规则：
+- 提问时保持 2-4 句话
+- 不要逐字复述候选人的回答
+- 如果跑题，礼貌地拉回主题
+- 如果对方请求澄清，给出有用的解释
+- 始终扮演面试官角色，不要暴露 AI 助手身份`;
+
+  const systemPrompt = isZh ? zhPrompt : `You are ${interview.aiName}, an expert interviewer conducting a structured conversation.
 
 INTERVIEW CONTEXT:
 - Title: ${interview.title}

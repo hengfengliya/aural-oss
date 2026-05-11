@@ -210,6 +210,9 @@ export default function InterviewsPage() {
     null,
   );
 
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
+
   const createFromTemplate = trpc.interview.createFromTemplate.useMutation({
     onSuccess: (interview) => {
       utils.interview.list.invalidate();
@@ -217,7 +220,7 @@ export default function InterviewsPage() {
     },
     onError: (err) => {
       toast({
-        title: "Failed to create interview",
+        title: tt("Failed to create interview", "创建面试失败"),
         description: err.message,
         variant: "destructive",
       });
@@ -232,9 +235,10 @@ export default function InterviewsPage() {
       createFromTemplate.mutate({
         templateId: template.id,
         projectId: projectId ?? undefined,
+        locale: isZh ? "zh" : "en",
       });
     },
-    [creatingTemplateId, createFromTemplate, projectId],
+    [creatingTemplateId, createFromTemplate, projectId, isZh],
   );
 
   const TIME_RANGE_OPTIONS = [
@@ -758,7 +762,10 @@ export default function InterviewsPage() {
                 {t("dashboard.noInterviews")}
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Pick a template to get started instantly, or create from scratch.
+                {tt(
+                  "Pick a template to get started instantly, or create from scratch.",
+                  "选择一个模板快速开始，或从空白创建。",
+                )}
               </p>
             </div>
 
@@ -788,23 +795,23 @@ export default function InterviewsPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-semibold leading-tight">
-                          {tpl.title}
+                          {isZh && tpl.titleZh ? tpl.titleZh : tpl.title}
                         </h4>
                       </div>
                       <Sparkles className="h-4 w-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary/60" />
                     </div>
                     <p className="text-[13px] leading-relaxed text-muted-foreground line-clamp-2">
-                      {tpl.description}
+                      {isZh && tpl.descriptionZh ? tpl.descriptionZh : tpl.description}
                     </p>
                     <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground/70">
                       <span className="inline-flex items-center gap-1">
                         <MessageSquare className="h-3 w-3" />
-                        {tpl.questions.length} questions
+                        {tpl.questions.length} {tt("questions", "道题")}
                       </span>
                       {tpl.timeLimitMinutes ? (
                         <span className="inline-flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {tpl.timeLimitMinutes} min
+                          {tpl.timeLimitMinutes} {tt("min", "分钟")}
                         </span>
                       ) : null}
                     </div>
@@ -823,7 +830,7 @@ export default function InterviewsPage() {
                   <Plus className="h-5 w-5" />
                 </div>
                 <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground">
-                  Create from scratch
+                  {tt("Create from scratch", "从空白创建")}
                 </span>
               </Link>
             </div>
@@ -978,7 +985,7 @@ export default function InterviewsPage() {
                   className="text-center"
                 />
                 <SortableHead
-                  label="Created"
+                  label={tt("Created", "创建时间")}
                   sortKey="date"
                   activeKey={sortKey}
                   direction={sortDir}

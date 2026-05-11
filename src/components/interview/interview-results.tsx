@@ -2,6 +2,7 @@
 "use client";
 
 import { CodeBlock } from "@/components/code-editor/code-block";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { useOrg } from "@/components/org-provider";
 import { SessionRow, SessionsTable } from "@/components/session/sessions-table";
 import {
@@ -83,6 +84,9 @@ export function InterviewResults({
     initialSessionId ?? null,
   );
   const utils = trpc.useUtils();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
 
   const sessions = trpc.session.listByInterview.useQuery({
     interviewId,
@@ -113,7 +117,7 @@ export function InterviewResults({
           <CardContent className="flex items-center gap-4 p-6">
             <Users className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Total Sessions</p>
+              <p className="text-sm text-muted-foreground">{tt("Total Sessions", "会话总数")}</p>
               <p className="text-2xl font-bold">
                 {insights.data?.totalSessions ?? 0}
               </p>
@@ -124,7 +128,7 @@ export function InterviewResults({
           <CardContent className="flex items-center gap-4 p-6">
             <UserCheck className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Participants</p>
+              <p className="text-sm text-muted-foreground">{tt("Participants", "参与者")}</p>
               <p className="text-2xl font-bold">
                 {insights.data?.totalParticipants ?? 0}
               </p>
@@ -135,7 +139,7 @@ export function InterviewResults({
           <CardContent className="flex items-center gap-4 p-6">
             <Clock className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Avg Duration</p>
+              <p className="text-sm text-muted-foreground">{tt("Avg Duration", "平均时长")}</p>
               <p className="text-2xl font-bold">
                 {insights.data?.avgDurationSeconds
                   ? `${Math.round(insights.data.avgDurationSeconds / 60)}m`
@@ -148,7 +152,7 @@ export function InterviewResults({
           <CardContent className="flex items-center gap-4 p-6">
             <BarChart3 className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Top Themes</p>
+              <p className="text-sm text-muted-foreground">{tt("Top Themes", "主要主题")}</p>
               <p className="text-lg font-bold">
                 {insights.data?.topThemes?.length ?? 0}
               </p>
@@ -166,14 +170,17 @@ export function InterviewResults({
           utils.session.listByInterview.invalidate({ interviewId });
           utils.analysis.getInterviewInsights.invalidate({ interviewId });
         }}
-        emptyMessage="No sessions yet. Share the interview link to start collecting responses."
+        emptyMessage={tt(
+          "No sessions yet. Share the interview link to start collecting responses.",
+          "暂无会话。分享面试链接开始收集回答。",
+        )}
       />
 
       {/* Themes */}
       {insights.data?.topThemes && insights.data.topThemes.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Top Themes</CardTitle>
+            <CardTitle>{tt("Top Themes", "主要主题")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -199,6 +206,9 @@ function SessionDetail({
 }) {
   const { toast } = useToast();
   const { currentOrg } = useOrg();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
   const summary = trpc.analysis.getSessionSummary.useQuery({ sessionId });
   const completeSession = trpc.session.complete.useMutation();
   const [generating, setGenerating] = useState(false);
@@ -225,14 +235,14 @@ function SessionDetail({
       });
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}));
-        throw new Error(errBody.error || "Failed to generate summary");
+        throw new Error(errBody.error || tt("Failed to generate summary", "生成报告失败"));
       }
       await summary.refetch();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to generate summary";
+        err instanceof Error ? err.message : tt("Failed to generate summary", "生成报告失败");
       toast({
-        title: "Summary generation failed",
+        title: tt("Summary generation failed", "报告生成失败"),
         description: message,
         variant: "destructive",
       });
@@ -254,7 +264,7 @@ function SessionDetail({
       await completeSession.mutateAsync({ id: sessionId });
       await summary.refetch();
     } catch {
-      toast({ title: "Failed to end interview", variant: "destructive" });
+      toast({ title: tt("Failed to end interview", "结束面试失败"), variant: "destructive" });
       return;
     }
     handleGenerateSummary();
@@ -464,7 +474,7 @@ function SessionDetail({
       <div className="flex items-center justify-between no-print">
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Results
+          {tt("Back to Results", "返回结果")}
         </Button>
         {hasReport && (
           <Button
@@ -485,7 +495,7 @@ function SessionDetail({
               ) : (
                 <FileDown className="mr-2 h-4 w-4" />
               )}
-              {exporting ? exportProgress || "Exporting..." : "Export PDF"}
+              {exporting ? exportProgress || tt("Exporting...", "导出中…") : tt("Export PDF", "导出 PDF")}
             </span>
           </Button>
         )}
@@ -523,8 +533,8 @@ function SessionDetail({
               return (
                 <div className="space-y-4">
                   <h1 className="text-2xl font-bold">
-                    {summary.data?.interviewTitle ?? "Interview"} — Session
-                    Report
+                    {summary.data?.interviewTitle ?? tt("Interview", "面试")}
+                    {" "}— {tt("Session Report", "会话报告")}
                   </h1>
 
                   <div className="flex flex-col items-stretch gap-4 sm:flex-row">
@@ -587,14 +597,14 @@ function SessionDetail({
                             {summary.data?.messages && (
                               <span className="flex items-center gap-1">
                                 <MessageCircle className="h-3.5 w-3.5" />
-                                {summary.data.messages.length} messages
+                                {summary.data.messages.length} {tt("messages", "条消息")}
                               </span>
                             )}
                           </div>
                           {summary.data?.interviewObjective && (
                             <p className="text-xs text-muted-foreground/80">
                               <span className="font-medium text-muted-foreground">
-                                Objective:
+                                {tt("Objective:", "面试目标：")}
                               </span>{" "}
                               {summary.data.interviewObjective}
                             </p>
@@ -608,7 +618,7 @@ function SessionDetail({
                       <Card className="shrink-0 sm:w-40">
                         <CardContent className="flex h-full flex-col items-center justify-center p-5">
                           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
-                            Avg Score
+                            {tt("Avg Score", "平均分")}
                           </p>
                           <div className="relative mt-2 flex h-24 w-24 items-center justify-center">
                             <svg
@@ -645,7 +655,7 @@ function SessionDetail({
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            out of 10
+                            {tt("out of 10", "满分 10")}
                           </p>
                         </CardContent>
                       </Card>
@@ -664,27 +674,32 @@ function SessionDetail({
                   {generating ? (
                     <>
                       <Loader2 className="mb-3 h-8 w-8 animate-spin text-primary" />
-                      <p className="mb-1 font-medium">Generating Report...</p>
+                      <p className="mb-1 font-medium">{tt("Generating Report...", "正在生成报告…")}</p>
                       <p className="text-sm text-muted-foreground">
-                        Analyzing the interview result. This may take a moment.
+                        {tt(
+                          "Analyzing the interview result. This may take a moment.",
+                          "正在分析面试结果，稍候片刻。",
+                        )}
                       </p>
                     </>
                   ) : (
                     <>
                       <Sparkles className="mb-3 h-8 w-8 text-muted-foreground" />
                       <p className="mb-1 font-medium">
-                        No report generated yet
+                        {tt("No report generated yet", "暂未生成报告")}
                       </p>
                       <p className="mb-4 text-sm text-muted-foreground">
-                        Generate an AI-powered analysis of this interview
-                        session.
+                        {tt(
+                          "Generate an AI-powered analysis of this interview session.",
+                          "为这场面试生成一份 AI 分析报告。",
+                        )}
                       </p>
                       <Button
                         onClick={handleRequestReport}
                         disabled={!summary.data?.messages.length}
                       >
                         <Sparkles className="mr-2 h-4 w-4" />
-                        Generate Report
+                        {tt("Generate Report", "生成报告")}
                       </Button>
                     </>
                   )}
@@ -698,7 +713,7 @@ function SessionDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    Summary
+                    {tt("Summary", "总结")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -715,7 +730,7 @@ function SessionDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <HelpCircle className="h-4 w-4" />
-                    Question-by-Question Evaluation
+                    {tt("Question-by-Question Evaluation", "逐题评估")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -741,7 +756,7 @@ function SessionDetail({
                         {qe.highlights && qe.highlights.length > 0 && (
                           <div>
                             <p className="mb-1 text-xs font-medium text-secondary-600 dark:text-secondary-400">
-                              Strengths
+                              {tt("Strengths", "亮点")}
                             </p>
                             <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
                               {qe.highlights.map((h, j) => (
@@ -753,7 +768,7 @@ function SessionDetail({
                         {qe.improvements && qe.improvements.length > 0 && (
                           <div>
                             <p className="mb-1 text-xs font-medium text-tertiary-600 dark:text-tertiary-300">
-                              Areas for Improvement
+                              {tt("Areas for Improvement", "改进方向")}
                             </p>
                             <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
                               {qe.improvements.map((imp, j) => (
@@ -775,7 +790,7 @@ function SessionDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-4 w-4" />
-                    Assessment Scores
+                    {tt("Assessment Scores", "评分维度")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -801,7 +816,7 @@ function SessionDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Search className="h-4 w-4" />
-                    Research Findings
+                    {tt("Research Findings", "调研发现")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -814,7 +829,7 @@ function SessionDetail({
                       {rf.keyTopics && rf.keyTopics.length > 0 && (
                         <div className="space-y-2">
                           <p className="text-xs font-medium text-secondary-600 dark:text-secondary-400">
-                            Key Topics
+                            {tt("Key Topics", "关键主题")}
                           </p>
                           {rf.keyTopics.map((kt, j) => (
                             <div key={j} className="rounded-md bg-muted/50 p-3">
@@ -831,7 +846,7 @@ function SessionDetail({
                       {rf.dataPoints && rf.dataPoints.length > 0 && (
                         <div>
                           <p className="mb-1 text-xs font-medium text-tertiary-600 dark:text-tertiary-300">
-                            Key Data Points
+                            {tt("Key Data Points", "关键数据点")}
                           </p>
                           <ul className="list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
                             {rf.dataPoints.map((dp, j) => (
@@ -855,7 +870,7 @@ function SessionDetail({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Volume2 className="h-4 w-4" />
-                      Tone &amp; Communication
+                      {tt("Tone & Communication", "语气与沟通")}
                       {toneAnalysis.overall && (
                         <Badge variant="outline" className="ml-auto capitalize">
                           {toneAnalysis.overall}
@@ -933,7 +948,7 @@ function SessionDetail({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Lightbulb className="h-4 w-4" />
-                        Key Insights
+                        {tt("Key Insights", "关键洞察")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -951,7 +966,7 @@ function SessionDetail({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Tags className="h-4 w-4" />
-                        Themes
+                        {tt("Themes", "主题")}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -972,7 +987,7 @@ function SessionDetail({
                       <CardTitle className="flex items-center justify-between">
                         <span className="flex items-center gap-2">
                           <SmilePlus className="h-4 w-4" />
-                          Sentiment
+                          {tt("Sentiment", "情绪")}
                         </span>
                         <Badge
                           variant="outline"
@@ -1013,10 +1028,14 @@ function SessionDetail({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <PenLine className="h-4 w-4" />
-                      Whiteboard
+                      {tt("Whiteboard", "白板")}
                       <Badge variant="secondary" className="ml-1 font-normal">
                         {whiteboardMsgs.length}{" "}
-                        {whiteboardMsgs.length === 1 ? "drawing" : "drawings"}
+                        {isZh
+                          ? "幅"
+                          : whiteboardMsgs.length === 1
+                            ? "drawing"
+                            : "drawings"}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
@@ -1076,10 +1095,14 @@ function SessionDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    Integrity Log
+                    {tt("Integrity Log", "诚信记录")}
                     <Badge variant="outline" className="ml-1 font-normal">
                       {antiCheatingLog.length}{" "}
-                      {antiCheatingLog.length === 1 ? "event" : "events"}
+                      {isZh
+                        ? "次"
+                        : antiCheatingLog.length === 1
+                          ? "event"
+                          : "events"}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
@@ -1090,15 +1113,15 @@ function SessionDetail({
                       for (const v of antiCheatingLog) {
                         const label =
                           v.type === "page_departure"
-                            ? "Page departure"
+                            ? tt("Page departure", "页面切走")
                             : v.type === "tab_switch"
-                              ? "Page departure"
+                              ? tt("Page departure", "页面切走")
                               : v.type === "focus_lost"
-                                ? "Page departure"
+                                ? tt("Page departure", "页面切走")
                                 : v.type === "paste"
-                                  ? "External paste blocked"
+                                  ? tt("External paste blocked", "已拦截外部粘贴")
                                   : v.type === "multi_screen"
-                                    ? "Multi-screen detected"
+                                    ? tt("Multi-screen detected", "检测到多屏")
                                     : v.type;
                         counts[label] = (counts[label] || 0) + 1;
                       }
@@ -1133,10 +1156,14 @@ function SessionDetail({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Code2 className="h-4 w-4" />
-                      Code Snippets
+                      {tt("Code Snippets", "代码片段")}
                       <Badge variant="secondary" className="ml-1 font-normal">
                         {codeMsgs.length}{" "}
-                        {codeMsgs.length === 1 ? "snippet" : "snippets"}
+                        {isZh
+                          ? "段"
+                          : codeMsgs.length === 1
+                            ? "snippet"
+                            : "snippets"}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
@@ -1196,7 +1223,7 @@ function SessionDetail({
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Mic className="h-4 w-4" />
-                    Audio Recording
+                    {tt("Audio Recording", "录音")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -1233,10 +1260,14 @@ function SessionDetail({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Camera className="h-4 w-4" />
-                      Interview Screenshots
+                      {tt("Interview Screenshots", "面试抓图")}
                       <Badge variant="secondary" className="ml-1 font-normal">
                         {screenshots.length}{" "}
-                        {screenshots.length === 1 ? "capture" : "captures"}
+                        {isZh
+                          ? "张"
+                          : screenshots.length === 1
+                            ? "capture"
+                            : "captures"}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
@@ -1245,7 +1276,7 @@ function SessionDetail({
                       <div>
                         <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
                           <Camera className="h-3.5 w-3.5" />
-                          Camera
+                          {tt("Camera", "摄像头")}
                         </p>
                         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                           {cameraShots.map((shot, i) => (
@@ -1284,7 +1315,7 @@ function SessionDetail({
                       <div>
                         <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
                           <Monitor className="h-3.5 w-3.5" />
-                          Screen
+                          {tt("Screen", "屏幕")}
                         </p>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           {screenShots.map((shot, i) => (
@@ -1333,14 +1364,14 @@ function SessionDetail({
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <MessageCircle className="h-4 w-4" />
-                    Transcript
+                    {tt("Transcript", "对话记录")}
                     <Badge variant="secondary" className="ml-1 font-normal">
                       {summary.data?.messages.filter(
                         (m: any) =>
                           m.contentType !== "WHITEBOARD" &&
                           (m.contentType as string) !== "CODE",
                       ).length ?? 0}{" "}
-                      messages
+                      {tt("messages", "条消息")}
                     </Badge>
                   </CardTitle>
                   {!pdfCapture &&
@@ -1359,7 +1390,10 @@ function SessionDetail({
                         <div className="space-y-4 pr-4">
                           {summary.data?.messages.length === 0 && (
                             <p className="py-8 text-center text-muted-foreground">
-                              No messages recorded for this session.
+                              {tt(
+                                "No messages recorded for this session.",
+                                "本场会话没有记录消息。",
+                              )}
                             </p>
                           )}
                           {summary.data?.messages
@@ -1396,7 +1430,7 @@ function SessionDetail({
                                         ) : (
                                           <Volume2 className="h-3 w-3" />
                                         )}
-                                        {isUser ? "Participant" : "Interviewer"}
+                                        {isUser ? tt("Participant", "参与者") : tt("Interviewer", "面试官")}
                                       </span>
                                       <span
                                         className={`text-[10px] ${isUser ? "text-primary-foreground/60" : "text-secondary-600 dark:text-secondary-400"}`}
@@ -1456,7 +1490,7 @@ function SessionDetail({
                                       ) : (
                                         <Volume2 className="h-3 w-3" />
                                       )}
-                                      {isUser ? "Participant" : "Interviewer"}
+                                      {isUser ? tt("Participant", "参与者") : tt("Interviewer", "面试官")}
                                     </span>
                                     <span
                                       className={`text-[10px] ${isUser ? "text-primary-foreground/60" : "text-secondary-600 dark:text-secondary-400"}`}
@@ -1492,18 +1526,19 @@ function SessionDetail({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              End interview and generate report?
+              {tt("End interview and generate report?", "结束面试并生成报告？")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This interview is still in progress. Generating the report will
-              end the interview — the candidate will no longer be able to
-              continue. This action cannot be undone.
+              {tt(
+                "This interview is still in progress. Generating the report will end the interview — the candidate will no longer be able to continue. This action cannot be undone.",
+                "本场面试仍在进行中。生成报告会终止面试，候选人将无法继续作答。此操作无法撤销。",
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmEndAndGenerate}>
-              End Interview & Generate
+              {tt("End Interview & Generate", "结束并生成")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAppLocale } from "@/components/app-locale-provider";
 import { ShareModal } from "@/components/interview/share-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,9 @@ const tabSkeletons: Record<string, React.ReactNode> = {
 };
 
 const tabs = [
-  { value: "content", label: "Content", icon: ListOrdered, href: "" },
-  { value: "settings", label: "Settings", icon: Settings, href: "/settings" },
-  { value: "sessions", label: "Sessions", icon: Users, href: "/sessions" },
+  { value: "content", label: "Content", labelZh: "内容", icon: ListOrdered, href: "" },
+  { value: "settings", label: "Settings", labelZh: "设置", icon: Settings, href: "/settings" },
+  { value: "sessions", label: "Sessions", labelZh: "会话", icon: Users, href: "/sessions" },
 ] as const;
 
 export default function EditInterviewLayout({
@@ -55,6 +56,9 @@ export default function EditInterviewLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
   const [isPending, startTransition] = useTransition();
   const [pendingTab, setPendingTab] = useState<string | null>(null);
   const id = params.id as string;
@@ -68,7 +72,7 @@ export default function EditInterviewLayout({
   const updateMutation = trpc.interview.update.useMutation({
     onSuccess: () => {
       utils.interview.getById.invalidate({ id });
-      toast({ title: "Interview updated" });
+      toast({ title: tt("Interview updated", "面试已更新") });
     },
   });
 
@@ -89,7 +93,7 @@ export default function EditInterviewLayout({
         slug = result.slug;
         utils.interview.getById.invalidate({ id });
       } catch {
-        toast({ title: "Failed to generate preview link", variant: "destructive" });
+        toast({ title: tt("Failed to generate preview link", "生成预览链接失败"), variant: "destructive" });
         return;
       }
     }
@@ -99,7 +103,7 @@ export default function EditInterviewLayout({
       });
       window.open(`/i/${slug}?sid=${sessionId}&preview=true`, "_blank");
     } catch {
-      toast({ title: "Failed to start preview", variant: "destructive" });
+      toast({ title: tt("Failed to start preview", "启动预览失败"), variant: "destructive" });
     }
   };
 
@@ -113,7 +117,7 @@ export default function EditInterviewLayout({
   }
 
   if (!interview.data) {
-    return <div>Interview not found</div>;
+    return <div>{tt("Interview not found", "找不到该面试")}</div>;
   }
 
   const data = interview.data;
@@ -146,7 +150,7 @@ export default function EditInterviewLayout({
                   navigator.clipboard.writeText(
                     `${window.location.origin}/i/${(data as Record<string, unknown>).publicSlug}`,
                   );
-                  toast({ title: "Link copied!" });
+                  toast({ title: tt("Link copied!", "链接已复制！") });
                 }}
               >
                 <Link2 className="h-3 w-3" />
@@ -155,15 +159,15 @@ export default function EditInterviewLayout({
             ) : (
               <Badge variant="secondary" className="gap-1">
                 <Lock className="h-3 w-3" />
-                Invite only
+                {tt("Invite only", "仅邀请")}
               </Badge>
             )}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {(data as any).chatEnabled && <Badge variant="outline">Chat</Badge>}
+            {(data as any).chatEnabled && <Badge variant="outline">{tt("Chat", "文字")}</Badge>}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {(data as any).voiceEnabled && <Badge variant="outline">Voice</Badge>}
+            {(data as any).voiceEnabled && <Badge variant="outline">{tt("Voice", "语音")}</Badge>}
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {(data as any).videoEnabled && <Badge variant="outline">Video</Badge>}
+            {(data as any).videoEnabled && <Badge variant="outline">{tt("Video", "视频")}</Badge>}
           </div>
           </div>
           <div className="flex shrink-0 gap-2">
@@ -175,7 +179,7 @@ export default function EditInterviewLayout({
               onClick={() => setShareOpen(true)}
             >
               <Share2 className="h-4 w-4" />
-              Share
+              {tt("Share", "分享")}
             </Button>
             <Button
               type="button"
@@ -190,7 +194,7 @@ export default function EditInterviewLayout({
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-              Preview
+              {tt("Preview", "预览")}
             </Button>
           </div>
         </div>
@@ -231,7 +235,7 @@ export default function EditInterviewLayout({
                 )}
               >
                 <tab.icon className="h-4 w-4" />
-                {tab.label}
+                {isZh ? tab.labelZh : tab.label}
               </button>
             );
           })}

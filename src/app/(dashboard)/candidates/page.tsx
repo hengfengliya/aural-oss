@@ -777,68 +777,68 @@ export default function CandidatesPage() {
       for (const col of visibleCols) {
         switch (col.key) {
           case "interview":
-            record[col.label] = row.interviewTitle;
+            record[columnLabel[col.key] ?? col.label] = row.interviewTitle;
             break;
           case "name":
-            record[col.label] = row.name || "";
+            record[columnLabel[col.key] ?? col.label] = row.name || "";
             break;
           case "email":
-            record[col.label] = row.email || "";
+            record[columnLabel[col.key] ?? col.label] = row.email || "";
             break;
           case "phone":
-            record[col.label] = c?.phone || "";
+            record[columnLabel[col.key] ?? col.label] = c?.phone || "";
             break;
           case "gender":
-            record[col.label] = c?.gender || "";
+            record[columnLabel[col.key] ?? col.label] = c?.gender || "";
             break;
           case "birthday":
-            record[col.label] = c?.birthday || "";
+            record[columnLabel[col.key] ?? col.label] = c?.birthday || "";
             break;
           case "education":
-            record[col.label] = c?.education || "";
+            record[columnLabel[col.key] ?? col.label] = c?.education || "";
             break;
           case "school":
-            record[col.label] = c?.school || "";
+            record[columnLabel[col.key] ?? col.label] = c?.school || "";
             break;
           case "major":
-            record[col.label] = c?.major || "";
+            record[columnLabel[col.key] ?? col.label] = c?.major || "";
             break;
           case "gradYear":
-            record[col.label] = c?.graduationYear ?? "";
+            record[columnLabel[col.key] ?? col.label] = c?.graduationYear ?? "";
             break;
           case "experience":
-            record[col.label] = c?.workExperience || "";
+            record[columnLabel[col.key] ?? col.label] = c?.workExperience || "";
             break;
           case "notes":
-            record[col.label] = c?.notes || "";
+            record[columnLabel[col.key] ?? col.label] = c?.notes || "";
             break;
           case "created":
-            record[col.label] = c?.createdAt ? formatDate(c.createdAt) : "";
+            record[columnLabel[col.key] ?? col.label] = c?.createdAt ? formatDate(c.createdAt) : "";
             break;
           case "score": {
             const sv = getSessionScore(row);
-            record[col.label] = sv !== null ? Number(sv.toFixed(1)) : "";
+            record[columnLabel[col.key] ?? col.label] = sv !== null ? Number(sv.toFixed(1)) : "";
             break;
           }
           case "duration":
-            record[col.label] = hasSession
+            record[columnLabel[col.key] ?? col.label] = hasSession
               ? formatDuration(session.totalDurationSeconds)
               : "";
             break;
           case "started":
-            record[col.label] = hasSession ? formatDate(getStartDate(row)) : "";
+            record[columnLabel[col.key] ?? col.label] = hasSession ? formatDate(getStartDate(row)) : "";
             break;
           case "finished":
-            record[col.label] =
+            record[columnLabel[col.key] ?? col.label] =
               hasSession && session.completedAt
                 ? formatDate(session.completedAt)
                 : "";
             break;
           case "source":
-            record[col.label] = sourceLabel(row.type);
+            record[columnLabel[col.key] ?? col.label] = sourceLabel(row.type);
             break;
           case "status":
-            record[col.label] = statusLabel(status);
+            record[columnLabel[col.key] ?? col.label] = statusLabel(status);
             break;
         }
       }

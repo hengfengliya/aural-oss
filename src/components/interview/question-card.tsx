@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { CodeBlock } from "@/components/code-editor/code-block";
 import { CodeEditorCanvas } from "@/components/code-editor/code-editor-canvas";
 import { cn } from "@/lib/utils";
@@ -49,12 +50,12 @@ import {
 /* ------------------------------------------------------------------ */
 
 export const QUESTION_TYPES = [
-  { value: "OPEN_ENDED", label: "Open Ended" },
-  { value: "SINGLE_CHOICE", label: "Single Choice" },
-  { value: "MULTIPLE_CHOICE", label: "Multiple Choice" },
-  { value: "CODING", label: "Coding" },
-  { value: "WHITEBOARD", label: "Whiteboard" },
-  { value: "RESEARCH", label: "Research" },
+  { value: "OPEN_ENDED", label: "Open Ended", labelZh: "开放问答" },
+  { value: "SINGLE_CHOICE", label: "Single Choice", labelZh: "单选" },
+  { value: "MULTIPLE_CHOICE", label: "Multiple Choice", labelZh: "多选" },
+  { value: "CODING", label: "Coding", labelZh: "编程题" },
+  { value: "WHITEBOARD", label: "Whiteboard", labelZh: "白板" },
+  { value: "RESEARCH", label: "Research", labelZh: "调研" },
 ] as const;
 
 export const QUESTION_TYPE_STYLES: Record<
@@ -62,6 +63,7 @@ export const QUESTION_TYPE_STYLES: Record<
   {
     icon: React.ElementType;
     label: string;
+    labelZh: string;
     badgeClass: string;
     optionClass: string;
   }
@@ -69,6 +71,7 @@ export const QUESTION_TYPE_STYLES: Record<
   OPEN_ENDED: {
     icon: MessageSquare,
     label: "Open Ended",
+    labelZh: "开放问答",
     badgeClass:
       "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300",
     optionClass: "",
@@ -76,6 +79,7 @@ export const QUESTION_TYPE_STYLES: Record<
   SINGLE_CHOICE: {
     icon: CircleDot,
     label: "Single Choice",
+    labelZh: "单选",
     badgeClass:
       "border-tertiary-400 bg-tertiary-100 text-tertiary-900 dark:border-tertiary-800 dark:bg-tertiary-900/30 dark:text-tertiary-300",
     optionClass:
@@ -84,6 +88,7 @@ export const QUESTION_TYPE_STYLES: Record<
   MULTIPLE_CHOICE: {
     icon: ListChecks,
     label: "Multiple Choice",
+    labelZh: "多选",
     badgeClass:
       "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300",
     optionClass:
@@ -92,6 +97,7 @@ export const QUESTION_TYPE_STYLES: Record<
   CODING: {
     icon: Code2,
     label: "Coding",
+    labelZh: "编程题",
     badgeClass:
       "border-secondary-200 bg-secondary-50 text-secondary-700 dark:border-secondary-800 dark:bg-secondary-900/30 dark:text-secondary-300",
     optionClass: "",
@@ -99,6 +105,7 @@ export const QUESTION_TYPE_STYLES: Record<
   WHITEBOARD: {
     icon: PenLine,
     label: "Whiteboard",
+    labelZh: "白板",
     badgeClass:
       "border-primary-200 bg-primary-50 text-primary-700 dark:border-primary-800 dark:bg-primary-900/30 dark:text-primary-300",
     optionClass: "",
@@ -106,6 +113,7 @@ export const QUESTION_TYPE_STYLES: Record<
   RESEARCH: {
     icon: Microscope,
     label: "Research",
+    labelZh: "调研",
     badgeClass:
       "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
     optionClass: "",
@@ -169,6 +177,9 @@ export function QuestionCard({
   dragProps,
   className,
 }: QuestionCardProps) {
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
   const [local, setLocal] = useState<QuestionCardData>(() =>
     structuredClone(data),
   );
@@ -214,13 +225,13 @@ export function QuestionCard({
             <div className="flex-1 space-y-3">
               {/* Question text */}
               <div className="space-y-1">
-                <Label className="text-xs">Question text</Label>
+                <Label className="text-xs">{tt("Question text", "题目")}</Label>
                 <Textarea
                   value={local.text}
                   onChange={(e) => update({ text: e.target.value })}
                   rows={2}
                   className="resize-y"
-                  placeholder="Enter the question..."
+                  placeholder={tt("Enter the question...", "请输入题目…")}
                   autoFocus
                 />
               </div>
@@ -228,7 +239,7 @@ export function QuestionCard({
               {/* Type + Description */}
               <div className="flex gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Type</Label>
+                  <Label className="text-xs">{tt("Type", "类型")}</Label>
                   <Select
                     value={local.type}
                     onValueChange={(v) => {
@@ -260,20 +271,20 @@ export function QuestionCard({
                     <SelectContent>
                       {QUESTION_TYPES.map((t) => (
                         <SelectItem key={t.value} value={t.value}>
-                          {t.label}
+                          {isZh ? t.labelZh : t.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs">Description (optional)</Label>
+                  <Label className="text-xs">{tt("Description (optional)", "说明（可选）")}</Label>
                   <Input
                     value={local.description ?? ""}
                     onChange={(e) =>
                       update({ description: e.target.value || undefined })
                     }
-                    placeholder="Helper text for the interviewee..."
+                    placeholder={tt("Helper text for the interviewee...", "给候选人的辅助说明…")}
                   />
                 </div>
               </div>
@@ -282,7 +293,7 @@ export function QuestionCard({
               {(local.type === "SINGLE_CHOICE" ||
                 local.type === "MULTIPLE_CHOICE") && (
                 <div className="space-y-2">
-                  <Label className="text-xs">Options</Label>
+                  <Label className="text-xs">{tt("Options", "选项")}</Label>
                   <div className="space-y-1.5">
                     {(local.options?.options ?? []).map(
                       (opt: string, oi: number) => (
@@ -303,7 +314,7 @@ export function QuestionCard({
                                 },
                               });
                             }}
-                            placeholder={`Option ${String.fromCharCode(65 + oi)}`}
+                            placeholder={isZh ? `选项 ${String.fromCharCode(65 + oi)}` : `Option ${String.fromCharCode(65 + oi)}`}
                             className="h-8 flex-1 text-sm"
                           />
                           {(local.options?.options?.length ?? 0) > 1 && (
@@ -349,7 +360,7 @@ export function QuestionCard({
                     }}
                   >
                     <Plus className="mr-1 h-3 w-3" />
-                    Add Option
+                    {tt("Add Option", "添加选项")}
                   </Button>
                 </div>
               )}
@@ -357,7 +368,7 @@ export function QuestionCard({
               {/* Starter code editor */}
               {local.type === "CODING" && (
                 <div className="space-y-2">
-                  <Label className="text-xs">Starter Code</Label>
+                  <Label className="text-xs">{tt("Starter Code", "起始代码")}</Label>
                   <div
                     className="overflow-auto rounded-md border border-zinc-800 code-scrollbar"
                     style={{
@@ -404,7 +415,7 @@ export function QuestionCard({
                   id={`required-${index}`}
                 />
                 <Label htmlFor={`required-${index}`} className="text-xs">
-                  Required
+                  {tt("Required", "必填")}
                 </Label>
               </div>
             </div>
@@ -426,24 +437,26 @@ export function QuestionCard({
                     ) : (
                       <Trash2 className="mr-1 h-3 w-3" />
                     )}
-                    Delete
+                    {tt("Delete", "删除")}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete question?</AlertDialogTitle>
+                    <AlertDialogTitle>{tt("Delete question?", "删除该题？")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently remove this question. This action
-                      cannot be undone.
+                      {tt(
+                        "This will permanently remove this question. This action cannot be undone.",
+                        "这会永久移除该题目，操作不可撤销。",
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={onDelete}
                     >
-                      Delete
+                      {tt("Delete", "删除")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -457,7 +470,7 @@ export function QuestionCard({
               disabled={saving || deleting}
             >
               <X className="mr-1 h-3 w-3" />
-              Cancel
+              {tt("Cancel", "取消")}
             </Button>
             <Button
               size="sm"
@@ -469,7 +482,7 @@ export function QuestionCard({
               ) : (
                 <Check className="mr-1 h-3 w-3" />
               )}
-              Done
+              {tt("Done", "完成")}
             </Button>
           </div>
         </div>
@@ -491,7 +504,7 @@ export function QuestionCard({
             <p className="font-medium">
               {data.text || (
                 <span className="italic text-muted-foreground">
-                  Empty question — click to edit
+                  {tt("Empty question — click to edit", "空白题目 — 点击编辑")}
                 </span>
               )}
             </p>
@@ -518,7 +531,7 @@ export function QuestionCard({
                     ))}
                   {(data.options?.options?.length ?? 0) > 4 && (
                     <span className="text-xs text-muted-foreground">
-                      +{(data.options?.options?.length ?? 0) - 4} more
+                      +{(data.options?.options?.length ?? 0) - 4} {tt("more", "项")}
                     </span>
                   )}
                 </div>
@@ -541,15 +554,15 @@ export function QuestionCard({
             <div className="flex items-center gap-2 mt-2">
               <Badge variant="outline" className={cn("text-xs", style.badgeClass)}>
                 <TypeIcon className="mr-1 h-3 w-3" />
-                {style.label}
+                {isZh ? style.labelZh : style.label}
               </Badge>
               {data.isRequired ? (
                 <Badge variant="outline" className="text-xs text-muted-foreground">
-                  Required
+                  {tt("Required", "必填")}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="text-xs text-muted-foreground">
-                  Optional
+                  {tt("Optional", "选填")}
                 </Badge>
               )}
             </div>
@@ -575,19 +588,21 @@ export function QuestionCard({
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete question?</AlertDialogTitle>
+                    <AlertDialogTitle>{tt("Delete question?", "删除该题？")}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This will permanently remove this question. This action
-                      cannot be undone.
+                      {tt(
+                        "This will permanently remove this question. This action cannot be undone.",
+                        "这会永久移除该题目，操作不可撤销。",
+                      )}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       onClick={onDelete}
                     >
-                      Delete
+                      {tt("Delete", "删除")}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

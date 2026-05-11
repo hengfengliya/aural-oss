@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { getStepIllustration } from "./interviewee-guide-content";
 import { useIntervieweeTour } from "./interviewee-tour-provider";
 
@@ -18,6 +19,8 @@ const TOOLTIP_WIDTH = 320;
 
 export function IntervieweeTourOverlay() {
   const tour = useIntervieweeTour();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -181,15 +184,15 @@ export function IntervieweeTourOverlay() {
           <div className="space-y-3 p-4">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                {idx + 1} of {total}
+                {isZh ? `第 ${idx + 1} 步 / 共 ${total} 步` : `${idx + 1} of ${total}`}
               </span>
             </div>
             {getStepIllustration(step.id)}
             <h3 className="text-sm font-bold leading-tight text-foreground">
-              {step.title}
+              {isZh && step.titleZh ? step.titleZh : step.title}
             </h3>
             <p className="text-[13px] leading-relaxed text-muted-foreground">
-              {step.description}
+              {isZh && step.descriptionZh ? step.descriptionZh : step.description}
             </p>
             {/* Progress bar */}
             <div className="pt-0.5">
@@ -205,7 +208,7 @@ export function IntervieweeTourOverlay() {
                 onClick={tour.skip}
                 className="text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
-                Skip tour
+                {isZh ? "跳过引导" : "Skip tour"}
               </button>
               <div className="flex gap-1.5">
                 {idx > 0 && (
@@ -213,14 +216,14 @@ export function IntervieweeTourOverlay() {
                     onClick={tour.prev}
                     className="inline-flex items-center rounded-lg border border-border px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted"
                   >
-                    Back
+                    {isZh ? "上一步" : "Back"}
                   </button>
                 )}
                 <button
                   onClick={isLast ? tour.skip : tour.next}
                   className="inline-flex items-center rounded-lg bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  {isLast ? "Done" : "Next"}
+                  {isLast ? (isZh ? "完成" : "Done") : (isZh ? "下一步" : "Next")}
                 </button>
               </div>
             </div>

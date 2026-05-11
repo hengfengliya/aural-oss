@@ -37,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAppLocale } from "@/components/app-locale-provider";
 import { trpc } from "@/lib/trpc/client";
 import {
   ArrowDown,
@@ -229,11 +230,48 @@ export function SessionsTable({
   onSessionClick,
   onDeleteSuccess,
   rowClickable = true,
-  searchPlaceholder = "Search by participant or email...",
-  emptyFilterMessage = "No sessions match your search.",
-  emptyMessage = "No sessions found.",
+  searchPlaceholder,
+  emptyFilterMessage,
+  emptyMessage,
 }: SessionsTableProps) {
   const { toast } = useToast();
+  const { locale } = useAppLocale();
+  const isZh = locale === "zh";
+  const tt = (en: string, zh: string) => (isZh ? zh : en);
+  const columnLabel: Record<string, string> = {
+    interview: tt("Interview", "面试"),
+    participant: tt("Participant", "参与者"),
+    email: tt("Email", "邮箱"),
+    status: tt("Status", "状态"),
+    messages: tt("Messages", "消息数"),
+    duration: tt("Duration", "时长"),
+    date: tt("Date", "日期"),
+  };
+  const timeRangeLabel: Record<string, string> = {
+    ALL: tt("All Time", "全部时间"),
+    "30m": tt("Past 30 min", "过去 30 分钟"),
+    "1h": tt("Past 1 hour", "过去 1 小时"),
+    "6h": tt("Past 6 hours", "过去 6 小时"),
+    "1d": tt("Past 1 day", "过去 1 天"),
+    "3d": tt("Past 3 days", "过去 3 天"),
+    "7d": tt("Past 7 days", "过去 7 天"),
+    "14d": tt("Past 14 days", "过去 14 天"),
+    "30d": tt("Past 30 days", "过去 30 天"),
+    "90d": tt("Past 90 days", "过去 90 天"),
+  };
+  const statusBadgeLabel = (s: string) => {
+    if (!isZh) return s;
+    switch (s) {
+      case "COMPLETED": return "已完成";
+      case "IN_PROGRESS": return "进行中";
+      case "ABANDONED": return "已放弃";
+      case "NOT_STARTED": return "未开始";
+      default: return s;
+    }
+  };
+  const resolvedSearchPlaceholder = searchPlaceholder ?? tt("Search by participant or email...", "按参与者或邮箱搜索…");
+  const resolvedEmptyFilter = emptyFilterMessage ?? tt("No sessions match your search.", "没有符合筛选条件的会话。");
+  const resolvedEmpty = emptyMessage ?? tt("No sessions found.", "暂无会话。");
 
   // ── State ──
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -343,7 +381,11 @@ export function SessionsTable({
   // ── Mutations ──
   const deleteMutation = trpc.session.deleteMany.useMutation({
     onSuccess: ({ deleted }) => {
-      toast({ title: `${deleted} session${deleted > 1 ? "s" : ""} deleted` });
+      toast({
+        title: isZh
+          ? `已删除 ${deleted} 个会话`
+          : `${deleted} session${deleted > 1 ? "s" : ""} deleted`,
+      });
       setSelectedIds(new Set());
       onDeleteSuccess?.();
     },
@@ -445,7 +487,7 @@ export function SessionsTable({
   function getCellValue(session: SessionRow, key: string): JSX.Element | string {
     switch (key) {
       case "participant":
-        return <span>{session.participantName || "Anonymous"}</span>;
+        return <span>{session.participantName || tt("Anonymous", "匿名")}</span>;
       case "email":
         return (
           <span className="text-muted-foreground">
@@ -458,7 +500,7 @@ export function SessionsTable({
             variant={session.status === "COMPLETED" ? "default" : "secondary"}
             className="whitespace-nowrap"
           >
-            {session.status}
+            {statusBadgeLabel(session.status)}
           </Badge>
         );
       case "messages":
@@ -490,13 +532,15 @@ export function SessionsTable({
 
   // Frozen-left label and value for the interview column (when shown) or participant
   const frozenSortKey = frozenCol?.sortKey ?? "participant";
-  const frozenLabel = frozenCol?.label ?? "Participant";
+  const frozenLabel = frozenCol
+    ? columnLabel[frozenCol.key] ?? frozenCol.label
+    : tt("Participant", "参与者");
 
   function getFrozenCellContent(session: SessionRow): string {
     if (frozenCol?.key === "interview") {
       return session.interview?.title ?? "-";
     }
-    return session.participantName || "Anonymous";
+    return session.participantName || tt("Anonymous", "匿名");
   }
 
   const handleExport = useCallback(() => {
@@ -510,13 +554,13 @@ export function SessionsTable({
       const record: Record<string, string | number | null> = {};
       for (const col of visibleCols) {
         switch (col.key) {
-          case "interview": record[col.label] = s.interview?.title ?? ""; break;
-          case "participant": record[col.label] = s.participantName || "Anonymous"; break;
-          case "email": record[col.label] = s.participantEmail || ""; break;
-          case "status": record[col.label] = s.status; break;
-          case "messages": record[col.label] = s._count.messages; break;
-          case "duration": record[col.label] = s.totalDurationSeconds ? `${Math.round(s.totalDurationSeconds / 60)}m` : ""; break;
-          case "date": record[col.label] = formatDate(s.createdAt); break;
+          case "interview": record[columnLabel[col.key] ?? col.label] = s.interview?.title ?? ""; break;
+          case "participant": record[columnLabel[col.key] ?? col.label] = s.participantName || "Anonymous"; break;
+          case "email": record[columnLabel[col.key] ?? col.label] = s.participantEmail || ""; break;
+          case "status": record[columnLabel[col.key] ?? col.label] = s.status; break;
+          case "messages": record[columnLabel[col.key] ?? col.label] = s._count.messages; break;
+          case "duration": record[columnLabel[col.key] ?? col.label] = s.totalDurationSeconds ? `${Math.round(s.totalDurationSeconds / 60)}m` : ""; break;
+          case "date": record[columnLabel[col.key] ?? col.label] = formatDate(s.createdAt); break;
         }
       }
       return record;
@@ -531,7 +575,7 @@ export function SessionsTable({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={searchPlaceholder}
+            placeholder={resolvedSearchPlaceholder}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -555,7 +599,7 @@ export function SessionsTable({
           <SelectContent>
             {TIME_RANGE_OPTIONS.map((opt) => (
               <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
+                {timeRangeLabel[opt.value] ?? opt.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -573,15 +617,15 @@ export function SessionsTable({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All Status</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+            <SelectItem value="ALL">{tt("All Status", "全部状态")}</SelectItem>
+            <SelectItem value="COMPLETED">{tt("Completed", "已完成")}</SelectItem>
+            <SelectItem value="IN_PROGRESS">{tt("In Progress", "进行中")}</SelectItem>
           </SelectContent>
         </Select>
 
         <Button variant="outline" onClick={handleExport} disabled={processedSessions.length === 0}>
           <Download className="mr-2 h-4 w-4" />
-          Export
+          {tt("Export", "导出")}
         </Button>
 
         {selectedIds.size > 0 && (
@@ -596,7 +640,7 @@ export function SessionsTable({
               ) : (
                 <Trash2 className="mr-2 h-4 w-4" />
               )}
-              Delete ({selectedIds.size})
+              {isZh ? `删除（${selectedIds.size}）` : `Delete (${selectedIds.size})`}
             </Button>
             <Button
               variant="outline"
@@ -604,7 +648,7 @@ export function SessionsTable({
               onClick={() => setSelectedIds(new Set())}
             >
               <X className="mr-1 h-4 w-4" />
-              Cancel
+              {tt("Cancel", "取消")}
             </Button>
           </>
         )}
@@ -618,7 +662,7 @@ export function SessionsTable({
           </div>
         ) : processedSessions.length === 0 ? (
           <p className="py-8 text-center text-muted-foreground">
-            {isFiltering ? emptyFilterMessage : emptyMessage}
+            {isFiltering ? resolvedEmptyFilter : resolvedEmpty}
           </p>
         ) : (
           <>
@@ -661,7 +705,7 @@ export function SessionsTable({
                     {dynamicColumns.map((col) => (
                       <SortableHead
                         key={col.key}
-                        label={col.label}
+                        label={columnLabel[col.key] ?? col.label}
                         sortKey={col.sortKey}
                         activeKey={sortKey}
                         direction={sortDir}
@@ -705,7 +749,7 @@ export function SessionsTable({
                                     className="flex-1 cursor-pointer select-none text-left"
                                     onClick={() => { if (!draggingCol) toggleColumn(col.key); }}
                                   >
-                                    {col.label}
+                                    {columnLabel[col.key] ?? col.label}
                                   </span>
                                   {visibleColumns.has(col.key) && (
                                     <Check className="h-4 w-4 shrink-0 text-primary" />
@@ -770,7 +814,7 @@ export function SessionsTable({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7"
-                            title="View session details"
+                            title={tt("View session details", "查看会话详情")}
                             onClick={() => onSessionClick(session)}
                           >
                             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
@@ -787,7 +831,7 @@ export function SessionsTable({
             {processedSessions.length > PAGE_SIZE_OPTIONS[0] && (
               <div className="flex items-center justify-between border-t px-4 py-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>Rows per page</span>
+                  <span>{tt("Rows per page", "每页行数")}</span>
                   <select
                     className="rounded border bg-background px-2 py-1 text-sm"
                     value={pageSize}
@@ -808,7 +852,7 @@ export function SessionsTable({
                       (safePage + 1) * pageSize,
                       processedSessions.length,
                     )}{" "}
-                    of {processedSessions.length}
+                    {tt("of", "/ 共")} {processedSessions.length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -844,15 +888,15 @@ export function SessionsTable({
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Sessions</AlertDialogTitle>
+            <AlertDialogTitle>{tt("Delete Sessions", "删除会话")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedIds.size} session
-              {selectedIds.size > 1 ? "s" : ""}? This will permanently remove
-              all associated messages and data. This action cannot be undone.
+              {isZh
+                ? `确认要删除 ${selectedIds.size} 个会话吗？这会永久移除所有关联消息和数据，操作不可撤销。`
+                : `Are you sure you want to delete ${selectedIds.size} session${selectedIds.size > 1 ? "s" : ""}? This will permanently remove all associated messages and data. This action cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tt("Cancel", "取消")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
@@ -860,7 +904,7 @@ export function SessionsTable({
                 setConfirmDelete(false);
               }}
             >
-              Delete
+              {tt("Delete", "删除")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
