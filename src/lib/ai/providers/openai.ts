@@ -6,6 +6,9 @@ export class OpenAIProvider implements LLMProvider {
   id = "openai";
   name = "OpenAI";
   models = [
+    "gpt-5.5",
+    "gpt-5.5-mini",
+    "gpt-5.5-pro",
     "gpt-5",
     "gpt-5-mini",
     "gpt-5-nano",
@@ -20,7 +23,7 @@ export class OpenAIProvider implements LLMProvider {
     "o3-mini",
     "o4-mini",
   ];
-  defaultModel = "gpt-5-mini";
+  defaultModel = "gpt-5.5-mini";
 
   private client: OpenAI;
 

@@ -41,7 +41,7 @@ export function listProviders(): LLMProvider[] {
  */
 export const REPORT_MODEL = process.env.REPORT_MODEL
   ?? (process.env.OPENAI_API_KEY
-    ? "gpt-5"
+    ? "gpt-5.5"
     : process.env.KIMI_API_KEY
       ? "kimi-k2.5"
       : "MiniMax-M2.1-lightning");
@@ -52,7 +52,7 @@ export const REPORT_MODEL = process.env.REPORT_MODEL
  */
 export const GENERATOR_MODEL = process.env.GENERATOR_MODEL
   ?? (process.env.OPENAI_API_KEY
-    ? "gpt-5-mini"
+    ? "gpt-5.5-mini"
     : process.env.KIMI_API_KEY
       ? "moonshot-v1-8k"
       : "MiniMax-M2.1-lightning");
