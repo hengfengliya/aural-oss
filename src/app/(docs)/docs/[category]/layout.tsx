@@ -24,12 +24,12 @@ export default function CategoryLayout({
 
           <footer className="border-t border-mk-border/60 px-8 lg:px-16 py-5">
             <div className="max-w-3xl flex items-center justify-between text-xs text-mk-text-muted">
-              <span>&copy; {new Date().getFullYear()} Aural. All rights reserved.</span>
+              <span>&copy; {new Date().getFullYear()} 大连焕贞医疗美容门诊部有限公司</span>
               <Link
                 href="/"
                 className="hover:text-mk-terracotta transition-colors"
               >
-                aural-ai.com
+                返回首页
               </Link>
             </div>
           </footer>

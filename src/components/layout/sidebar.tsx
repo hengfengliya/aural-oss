@@ -191,7 +191,7 @@ export function Sidebar({
           <AuralLogo size={28} className="shrink-0" />
           {!collapsed && (
             <span className="font-heading text-base font-bold tracking-[2px]">
-              AURAL
+              HZ
             </span>
           )}
         </Link>

@@ -18,7 +18,7 @@ export const categories: DocCategory[] = [
     title: "Getting Started",
     titleZh: "快速上手",
     description: "Learn the basics of Aural and set up your first interview",
-    descriptionZh: "了解 Aural 的基本用法，搭建你的第一场面试",
+    descriptionZh: "了解焕贞 AI 面试的基本用法，搭建你的第一场面试",
     iconName: "Rocket",
     audience: "both",
     order: 1,

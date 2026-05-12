@@ -27,11 +27,11 @@ const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://aural-ai.com";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Aural - AI 面试平台 | 语音与视频面试",
-    template: "%s | Aural",
+    default: "焕贞 AI 面试 | 语音与视频面试平台",
+    template: "%s | 焕贞 AI 面试",
   },
   description:
-    "Aural 是一个 AI 面试平台，支持结构化的语音、文字与视频面试。自动筛选候选人，实时洞察，规模化推进面试流程。",
+    "焕贞 AI 面试是一个智能面试平台，支持结构化的语音、文字与视频面试。自动筛选候选人，实时洞察，规模化推进面试流程。",
   keywords: [
     "AI 面试平台",
     "语音面试",
@@ -51,25 +51,25 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "zh_CN",
-    siteName: "Aural",
-    title: "Aural - AI 面试平台 | 语音与视频面试",
+    siteName: "焕贞 AI 面试",
+    title: "焕贞 AI 面试 | 语音与视频面试平台",
     description:
-      "Aural 是一个 AI 面试平台，支持结构化的语音、文字与视频面试。自动筛选候选人，实时洞察，规模化推进面试流程。",
+      "焕贞 AI 面试是一个智能面试平台，支持结构化的语音、文字与视频面试。自动筛选候选人，实时洞察，规模化推进面试流程。",
     url: siteUrl,
     images: [
       {
         url: `${siteUrl}/images/marketing/hero-screenshots.webp`,
         width: 1920,
         height: 960,
-        alt: "Aural AI 面试平台",
+        alt: "焕贞 AI 面试平台",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aural - AI 面试平台 | 语音与视频面试",
+    title: "焕贞 AI 面试 | 语音与视频面试平台",
     description:
-      "Aural 是一个 AI 面试平台，支持结构化的语音、文字与视频面试。自动筛选候选人，实时洞察，规模化推进面试流程。",
+      "焕贞 AI 面试是一个智能面试平台，支持结构化的语音、文字与视频面试。自动筛选候选人，实时洞察，规模化推进面试流程。",
     images: [`${siteUrl}/images/marketing/hero-screenshots.webp`],
   },
 };

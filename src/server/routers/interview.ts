@@ -316,7 +316,7 @@ export const interviewRouter = router({
         chatEnabled: z.boolean().default(true),
         voiceEnabled: z.boolean().default(false),
         videoEnabled: z.boolean().default(false),
-        aiName: z.string().default("Aural"),
+        aiName: z.string().default("焕贞"),
         aiTone: z
           .enum(["CASUAL", "PROFESSIONAL", "FORMAL", "FRIENDLY"])
           .default("PROFESSIONAL"),

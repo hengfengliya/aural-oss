@@ -132,8 +132,8 @@ export default function ApiKeysSettingsPage() {
         <h2 className="text-xl font-semibold">{isZh ? "API 密钥" : "API Keys"}</h2>
         <p className="text-sm text-muted-foreground">
           {isZh
-            ? "管理用于以编程方式访问 Aural API 的 API 密钥。"
-            : "Manage API keys for programmatic access to the Aural API."}
+            ? "管理用于以编程方式访问 HZ API 的 API 密钥。"
+            : "Manage API keys for programmatic access to the HZ API."}
           {" "}
           <Link
             href="/docs/developer-api"
