@@ -30,6 +30,15 @@ Rules:
 - Return ONLY the JSON object, no markdown fences, no explanation`;
 
 function getClient(): { client: OpenAI; model: string } {
+  if (process.env.OPENAI_API_KEY) {
+    return {
+      client: new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+        baseURL: process.env.OPENAI_BASE_URL,
+      }),
+      model: process.env.RESUME_PARSER_MODEL ?? "gpt-5.5-mini",
+    };
+  }
   if (process.env.MINIMAX_API_KEY) {
     return {
       client: new OpenAI({
