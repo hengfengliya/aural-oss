@@ -124,6 +124,12 @@ const translations: TranslationMap = {
     "auth.invalidCode": "Invalid code",
     "auth.resetPasswordAction": "Reset password",
     "auth.passwordUpdated": "Password updated successfully",
+    "auth.larkSignIn": "Sign in with Lark",
+    "auth.orDivider": "or",
+    "auth.larkErrorNoEmail":
+      "Your Lark account has no bound email. Please bind one in Lark and try again.",
+    "auth.larkErrorGeneric":
+      "Lark sign-in failed. Please try again or use email login.",
     "dashboard.title": "Dashboard",
     "dashboard.subtitle": "Overview of your interview activity",
     "dashboard.totalInterviews": "Total Interviews",
@@ -328,6 +334,11 @@ const translations: TranslationMap = {
     "auth.invalidCode": "验证码无效",
     "auth.resetPasswordAction": "重置密码",
     "auth.passwordUpdated": "密码更新成功",
+    "auth.larkSignIn": "使用飞书登录",
+    "auth.orDivider": "或",
+    "auth.larkErrorNoEmail":
+      "你的飞书账号未绑定邮箱，请先到飞书个人中心绑定邮箱后重试。",
+    "auth.larkErrorGeneric": "飞书登录失败，请重试或使用邮箱登录。",
     "dashboard.title": "仪表盘",
     "dashboard.subtitle": "查看你的面试活动概览",
     "dashboard.totalInterviews": "面试总数",

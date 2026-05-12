@@ -17,17 +17,38 @@ import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const { t } = useAppLocale();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const supabase = createClient();
+
+  const larkEnabled =
+    process.env.NEXT_PUBLIC_LARK_LOGIN_ENABLED === "true";
+
+  useEffect(() => {
+    const larkError = searchParams.get("lark_error");
+    if (!larkError) return;
+    const description =
+      larkError === "no_email"
+        ? t("auth.larkErrorNoEmail")
+        : t("auth.larkErrorGeneric");
+    toast({
+      title: t("auth.errorTitle"),
+      description,
+      variant: "destructive",
+    });
+    const url = new URL(window.location.href);
+    url.searchParams.delete("lark_error");
+    window.history.replaceState({}, "", url.toString());
+  }, [searchParams, toast, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +113,28 @@ export function LoginForm() {
             {t("auth.signIn")}
           </Button>
         </form>
+
+        {larkEnabled && (
+          <>
+            <div className="my-4 flex items-center gap-2">
+              <div className="h-px flex-1 bg-border" />
+              <span className="text-xs text-muted-foreground">
+                {t("auth.orDivider")}
+              </span>
+              <div className="h-px flex-1 bg-border" />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                window.location.href = "/api/auth/lark/start";
+              }}
+            >
+              {t("auth.larkSignIn")}
+            </Button>
+          </>
+        )}
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
