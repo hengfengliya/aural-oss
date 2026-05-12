@@ -25,7 +25,6 @@ import {
     Gauge,
     HelpCircle,
     LayoutDashboard,
-    LifeBuoy,
     Loader2,
     LogOut,
     MessageSquare,
@@ -44,7 +43,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { Header } from "./header";
-import { SupportDrawer } from "./support-drawer";
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -151,7 +149,6 @@ export function Sidebar({
   const router = useRouter();
   const { user, profile } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
-  const [supportOpen, setSupportOpen] = useState(false);
   const [creatingInterview, setCreatingInterview] = useState(false);
   const { t } = useAppLocale();
 
@@ -213,18 +210,8 @@ export function Sidebar({
             />
           </nav>
 
-          {/* Bottom section: Support */}
+          {/* Bottom section */}
           <div className="space-y-1 px-3 pb-2">
-            <button
-              onClick={() => setSupportOpen(true)}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <LifeBuoy className="h-4 w-4 shrink-0" />
-              {!collapsed && t("sidebar.support")}
-            </button>
             <SidebarLink
               href="/usage"
               icon={Gauge}
@@ -274,7 +261,7 @@ export function Sidebar({
             ))}
           </nav>
 
-          {/* Bottom section: Settings + Support */}
+          {/* Bottom section: Settings */}
           <div className="space-y-1 px-3 pb-2">
             <SidebarLink
               href="/settings"
@@ -283,16 +270,6 @@ export function Sidebar({
               active={isSettingsActive}
               collapsed={collapsed}
             />
-            <button
-              onClick={() => setSupportOpen(true)}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              <LifeBuoy className="h-4 w-4 shrink-0" />
-              {!collapsed && t("sidebar.support")}
-            </button>
             <SidebarLink
               href="/usage"
               icon={Gauge}
@@ -313,8 +290,6 @@ export function Sidebar({
           </div>
         </>
       )}
-
-      <SupportDrawer open={supportOpen} onOpenChange={setSupportOpen} />
 
       {/* User profile */}
       <div className="border-t">
