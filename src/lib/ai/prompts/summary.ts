@@ -161,6 +161,7 @@ Provide a structured analysis as VALID JSON ONLY (use only standard ASCII double
 
   const result: LLMMessage[] = [
     { role: "system", content: systemPrompt },
+    { role: "user", content: "Please analyze the interview above and respond with the requested JSON." },
   ];
 
   // ── Attach whiteboard images as a multimodal user message ──────
