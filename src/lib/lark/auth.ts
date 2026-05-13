@@ -43,8 +43,11 @@ export function getLarkConfig() {
 
 export function buildAuthorizeUrl(state: string): string {
   const { appId, redirectUri } = getLarkConfig();
+  // contact:user.employee:readonly is required for enterprise_email (admin-assigned
+  // mailbox in Lark contact). contact:user.email:readonly only covers the
+  // account-level primary email which is often unset for users registered by phone.
   const scope =
-    "contact:user.base:readonly contact:user.email:readonly contact:user.id:readonly";
+    "contact:user.base:readonly contact:user.email:readonly contact:user.employee:readonly contact:user.id:readonly";
   // Hand-build query so spaces in scope are encoded as %20 (not +), which Lark prefers.
   const qs = [
     `app_id=${encodeURIComponent(appId)}`,
