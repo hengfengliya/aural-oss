@@ -1,5 +1,6 @@
 import {
   exchangeCodeForToken,
+  fetchLarkContactUser,
   fetchLarkUserInfo,
   pickEmail,
   type LarkUserInfo,
@@ -78,32 +79,52 @@ export async function GET(request: NextRequest) {
   }
 
   let userInfo: LarkUserInfo;
+  let accessToken: string;
   try {
-    const accessToken = await exchangeCodeForToken(code);
+    accessToken = await exchangeCodeForToken(code);
     userInfo = await fetchLarkUserInfo(accessToken);
   } catch (err) {
     console.error("[lark/callback] exchange or user_info failed:", err);
     return errorRedirect(request, "lark_api_failed");
   }
 
-  console.log("[lark/callback] user_info keys:", Object.keys(userInfo));
-  console.log("[lark/callback] email field:", JSON.stringify(userInfo.email));
   console.log(
-    "[lark/callback] enterprise_email field:",
-    JSON.stringify(userInfo.enterprise_email),
+    "[lark/callback] v1 user_info raw:",
+    JSON.stringify(userInfo),
   );
+
+  // Fallback: query contact v3 to get enterprise_email (v1 user_info never returns it).
+  let contactExtra: { email?: string; enterprise_email?: string } | null = null;
+  if (!pickEmail(userInfo) && userInfo.open_id) {
+    try {
+      contactExtra = await fetchLarkContactUser(accessToken, userInfo.open_id);
+      console.log(
+        "[lark/callback] v3 contact fallback:",
+        JSON.stringify(contactExtra),
+      );
+      if (contactExtra) {
+        userInfo.email = userInfo.email || contactExtra.email;
+        userInfo.enterprise_email =
+          userInfo.enterprise_email || contactExtra.enterprise_email;
+      }
+    } catch (err) {
+      console.warn("[lark/callback] v3 contact lookup threw:", err);
+    }
+  }
 
   const email = pickEmail(userInfo);
   if (!email) {
     const url = new URL("/login", request.url);
     url.searchParams.set("lark_error", "no_email");
-    const keys = Object.keys(userInfo).join(",");
-    const hasEmail = userInfo.email ? "1" : "0";
-    const hasEntEmail = userInfo.enterprise_email ? "1" : "0";
-    url.searchParams.set(
-      "_diag",
-      `keys=${keys}|email=${hasEmail}|ent=${hasEntEmail}`,
+    // Dump full v1 + v3 payload (base64) so user can paste URL and we see exact server reply.
+    const payload = {
+      v1: userInfo,
+      v3: contactExtra,
+    };
+    const b64 = Buffer.from(JSON.stringify(payload), "utf8").toString(
+      "base64url",
     );
+    url.searchParams.set("_diag", b64);
     return NextResponse.redirect(url);
   }
 

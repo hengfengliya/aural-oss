@@ -120,6 +120,57 @@ export async function fetchLarkUserInfo(
   return payload.data;
 }
 
+const LARK_CONTACT_USER_URL =
+  "https://open.feishu.cn/open-apis/contact/v3/users";
+
+type LarkContactUserResponse = {
+  code: number;
+  msg: string;
+  data?: {
+    user?: {
+      email?: string;
+      enterprise_email?: string;
+      mobile?: string;
+      name?: string;
+      en_name?: string;
+      open_id?: string;
+      union_id?: string;
+      user_id?: string;
+    };
+  };
+};
+
+/**
+ * Fallback: query contact v3 with user_access_token to get richer fields
+ * (notably enterprise_email which v1 user_info never returns).
+ *
+ * Requires scope: contact:user.email:readonly (already granted in this app).
+ */
+export async function fetchLarkContactUser(
+  userAccessToken: string,
+  openId: string,
+): Promise<{ email?: string; enterprise_email?: string } | null> {
+  const url = `${LARK_CONTACT_USER_URL}/${encodeURIComponent(openId)}?user_id_type=open_id`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${userAccessToken}` },
+    cache: "no-store",
+  });
+
+  const payload = (await res.json()) as LarkContactUserResponse;
+
+  if (!res.ok || payload.code !== 0 || !payload.data?.user) {
+    console.warn(
+      `[lark/contact] v3 lookup failed: code=${payload.code} msg=${payload.msg}`,
+    );
+    return null;
+  }
+
+  return {
+    email: payload.data.user.email,
+    enterprise_email: payload.data.user.enterprise_email,
+  };
+}
+
 /**
  * Resolve the email to use as the Supabase user identifier.
  * Prefers enterprise_email (more stable for org users), falls back to personal email.
