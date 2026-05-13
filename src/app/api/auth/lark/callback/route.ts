@@ -86,9 +86,25 @@ export async function GET(request: NextRequest) {
     return errorRedirect(request, "lark_api_failed");
   }
 
+  console.log("[lark/callback] user_info keys:", Object.keys(userInfo));
+  console.log("[lark/callback] email field:", JSON.stringify(userInfo.email));
+  console.log(
+    "[lark/callback] enterprise_email field:",
+    JSON.stringify(userInfo.enterprise_email),
+  );
+
   const email = pickEmail(userInfo);
   if (!email) {
-    return errorRedirect(request, "no_email");
+    const url = new URL("/login", request.url);
+    url.searchParams.set("lark_error", "no_email");
+    const keys = Object.keys(userInfo).join(",");
+    const hasEmail = userInfo.email ? "1" : "0";
+    const hasEntEmail = userInfo.enterprise_email ? "1" : "0";
+    url.searchParams.set(
+      "_diag",
+      `keys=${keys}|email=${hasEmail}|ent=${hasEntEmail}`,
+    );
+    return NextResponse.redirect(url);
   }
 
   let hashedToken: string;
