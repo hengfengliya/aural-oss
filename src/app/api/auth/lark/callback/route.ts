@@ -15,6 +15,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function errorRedirect(request: NextRequest, code: string) {
+  console.log(`[lark/callback] errorRedirect: ${code}`);
   const url = new URL("/login", request.url);
   url.searchParams.set("lark_error", code);
   return NextResponse.redirect(url);
@@ -72,6 +73,12 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get("code");
   const stateFromQuery = url.searchParams.get("state");
   const stateCookie = request.cookies.get(STATE_COOKIE)?.value;
+
+  console.log(
+    `[lark/callback] entry code=${code ? "Y" : "N"} stateQuery=${
+      stateFromQuery ? stateFromQuery.slice(0, 8) : "N"
+    } stateCookie=${stateCookie ? stateCookie.slice(0, 8) : "N"}`,
+  );
 
   if (!code) return errorRedirect(request, "missing_code");
   if (!stateFromQuery || !stateCookie || stateFromQuery !== stateCookie) {
