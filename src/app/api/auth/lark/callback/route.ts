@@ -3,6 +3,7 @@ import {
   fetchLarkContactUser,
   fetchLarkUserInfo,
   pickEmail,
+  resolveSupabaseEmail,
   type LarkUserInfo,
 } from "@/lib/lark/auth";
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
@@ -119,21 +120,13 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const email = pickEmail(userInfo);
-  if (!email) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("lark_error", "no_email");
-    // Dump full v1 + v3 payload (base64) so user can paste URL and we see exact server reply.
-    const payload = {
-      v1: userInfo,
-      v3: contactExtra,
-    };
-    const b64 = Buffer.from(JSON.stringify(payload), "utf8").toString(
-      "base64url",
-    );
-    url.searchParams.set("_diag", b64);
-    return NextResponse.redirect(url);
-  }
+  // Always resolvable — falls back to `${open_id}@lark.local` if Lark didn't return email.
+  const email = resolveSupabaseEmail(userInfo);
+  console.log(
+    `[lark/callback] resolved supabase email source=${
+      pickEmail(userInfo) ? "lark_real" : "synthetic_open_id"
+    } email=${email}`,
+  );
 
   let hashedToken: string;
   try {

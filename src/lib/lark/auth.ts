@@ -180,3 +180,18 @@ export function pickEmail(info: LarkUserInfo): string | null {
   const candidate = info.enterprise_email?.trim() || info.email?.trim();
   return candidate && candidate.length > 0 ? candidate.toLowerCase() : null;
 }
+
+/**
+ * Always-resolvable email for Supabase auth.users.email (unique identifier only).
+ *
+ * Lark's /authen/v1/user_info returns email="" when the user hasn't bound
+ * a primary mailbox at the *account* layer — and the v3 contact fallback is
+ * gated behind tenant_access_token + admin scopes we don't have. To unblock
+ * HR sign-in we synthesize a stable identifier from open_id, which Lark
+ * guarantees is per-user-per-tenant unique and immutable.
+ */
+export function resolveSupabaseEmail(info: LarkUserInfo): string {
+  const real = pickEmail(info);
+  if (real) return real;
+  return `${info.open_id.toLowerCase()}@lark.local`;
+}
