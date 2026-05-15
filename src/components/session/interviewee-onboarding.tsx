@@ -683,6 +683,31 @@ function MicCheck({ done, onDone, language, allowSkip = true }: { done: boolean;
     setError(null);
     setPhase("requesting");
 
+    // CRITICAL — unlock playback AudioContext SYNCHRONOUSLY in user-gesture
+    // chain, before any await. iOS Safari only honors resume() while
+    // "transient activation" is valid (~5s after click). The fetch below
+    // can blow past that window when TTS server is slow, so deferring ctx
+    // creation to after fetch produced "AI silent" symptom on iPhone.
+    // We also play a 1-sample silent buffer to force the audio engine to
+    // actually start running, not just flip state to "running".
+    let ctx = audioCtxRef.current;
+    if (!ctx || ctx.state === "closed") {
+      ctx = new AudioContext({ sampleRate: 24000 });
+      audioCtxRef.current = ctx;
+    }
+    if (ctx.state === "suspended") {
+      await ctx.resume().catch(() => {});
+    }
+    try {
+      const warmup = ctx.createBuffer(1, 1, 22050);
+      const warmupSrc = ctx.createBufferSource();
+      warmupSrc.buffer = warmup;
+      warmupSrc.connect(ctx.destination);
+      warmupSrc.start(0);
+    } catch {
+      // ignore — engine may already be warm
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach((t) => t.stop());
@@ -714,11 +739,14 @@ function MicCheck({ done, onDone, language, allowSkip = true }: { done: boolean;
       });
 
       if (res.ok && res.body) {
-        const ctx = new AudioContext({ sampleRate: 24000 });
-        audioCtxRef.current = ctx;
-        // iOS Safari requires resume() after creating an AudioContext, even
-        // when triggered by a click — otherwise the first PCM chunks play
-        // silently.
+        // Reuse the AudioContext we unlocked synchronously at the top of
+        // playTTS — DO NOT create a new one here. New ctx after multi-second
+        // fetch await is past iOS Safari's transient-activation window and
+        // resume() silently no-ops.
+        if (!ctx || ctx.state === "closed") {
+          ctx = new AudioContext({ sampleRate: 24000 });
+          audioCtxRef.current = ctx;
+        }
         if (ctx.state === "suspended") {
           await ctx.resume().catch(() => {});
         }
