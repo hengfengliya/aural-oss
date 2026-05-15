@@ -692,7 +692,11 @@ function MicCheck({ done, onDone, language, allowSkip = true }: { done: boolean;
       return;
     }
 
-    startListening(true);
+    // NOTE: do NOT start listening (mic capture WebSocket + 16kHz AudioContext)
+    // before AI playback finishes. iOS Safari treats a concurrent capture
+    // AudioContext as a record-mode session and silences the playback context
+    // mid-stream — symptom is "AI says one word then goes quiet." The
+    // playback flow below kicks off startListening() in its tail.
     setPhase("playing");
 
     const msg = getMicTestMessage(language);
