@@ -349,9 +349,14 @@ export function useVoice({
       // Request microphone permission
       await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Create AudioContext for playback
+      // Create AudioContext for playback. iOS Safari defaults to "suspended"
+      // until resume() is called inside a user-gesture chain — otherwise the
+      // first audio chunks are silently dropped.
       if (!audioContextRef.current) {
         audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      }
+      if (audioContextRef.current.state === "suspended") {
+        await audioContextRef.current.resume().catch(() => {});
       }
 
       // Reset tracked messages
@@ -728,6 +733,9 @@ export function useVoice({
       mediaStreamRef.current = stream;
 
       const ctx = new AudioContext({ sampleRate: 16000 });
+      if (ctx.state === "suspended") {
+        await ctx.resume().catch(() => {});
+      }
       const source = ctx.createMediaStreamSource(stream);
       const processor = ctx.createScriptProcessor(4096, 1, 1);
 

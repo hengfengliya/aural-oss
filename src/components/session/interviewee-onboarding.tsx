@@ -712,6 +712,12 @@ function MicCheck({ done, onDone, language, allowSkip = true }: { done: boolean;
       if (res.ok && res.body) {
         const ctx = new AudioContext({ sampleRate: 24000 });
         audioCtxRef.current = ctx;
+        // iOS Safari requires resume() after creating an AudioContext, even
+        // when triggered by a click — otherwise the first PCM chunks play
+        // silently.
+        if (ctx.state === "suspended") {
+          await ctx.resume().catch(() => {});
+        }
         const reader = res.body.getReader();
         let playTime = ctx.currentTime;
         let leftover: Uint8Array | null = null;

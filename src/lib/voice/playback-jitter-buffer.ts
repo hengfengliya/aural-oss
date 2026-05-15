@@ -1,8 +1,12 @@
 export const PLAYBACK_SAMPLE_RATE = 24_000;
-export const JITTER_BUFFER_TARGET_MS = 120;
-export const JITTER_BUFFER_LOW_WATER_MS = 60;
-export const JITTER_BUFFER_MAX_WAIT_MS = 180;
-export const JITTER_BUFFER_MAX_BATCH_MS = 260;
+// Buffer parameters tuned for mobile main-thread scheduling. Large single-chunk
+// AudioBuffer creation/start() calls (the old 260ms batch ≈ 6240 samples) caused
+// audible stalls on iOS Safari; halving these keeps each flush small enough to
+// stay smooth without raising underrun risk meaningfully.
+export const JITTER_BUFFER_TARGET_MS = 80;
+export const JITTER_BUFFER_LOW_WATER_MS = 40;
+export const JITTER_BUFFER_MAX_WAIT_MS = 120;
+export const JITTER_BUFFER_MAX_BATCH_MS = 120;
 
 export interface PlaybackFlushDecision {
   queuedSamples: number;
