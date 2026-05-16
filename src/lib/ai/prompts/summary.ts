@@ -92,13 +92,19 @@ export function buildSummaryPrompt(
     : "";
 
   // ── Per-question evaluation section ────────────────────────────
+  // STRUCTURED_EVAL questions are scored separately by a dedicated rubric
+  // evaluator in /api/ai/summarize. We exclude them here to avoid two
+  // different scores for the same question (one gut-feel 1-10, one rubric X/Y).
+  const nonStructuredQuestions = (questions ?? []).filter(
+    (q) => q.type !== "STRUCTURED_EVAL",
+  );
   const questionEvalInstruction =
-    questions && questions.length > 0
-      ? `6. For EACH interview question, evaluate the participant's response: how well they addressed the question, key strengths, areas for improvement, and a score (1-10)\n`
+    nonStructuredQuestions.length > 0
+      ? `6. For EACH interview question listed below (excluding any STRUCTURED_EVAL questions, which are scored separately), evaluate the participant's response: how well they addressed the question, key strengths, areas for improvement, and a score (1-10)\n`
       : "";
 
   const questionEvalJsonField =
-    questions && questions.length > 0
+    nonStructuredQuestions.length > 0
       ? `,
   "questionEvaluations": [
     {

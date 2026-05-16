@@ -23,7 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { getSessionOverallScore } from "@/lib/session-score";
+import { computeSessionScore, getSessionOverallScore } from "@/lib/session-score";
 import { trpc } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
 import {
@@ -478,12 +478,24 @@ function SessionDetail({
     (summary.data?.themes && summary.data.themes.length > 0)
   );
 
-  const overallScore = getSessionOverallScore({
+  const questionWeights =
+    ((summary.data as Record<string, unknown> | undefined)?.questionWeights as
+      | Record<string, number>
+      | undefined) ?? {};
+  const scoreResult = computeSessionScore({
     questionEvaluations,
     criteriaEvaluations,
+    structuredEvaluations,
+    weights: questionWeights,
   });
+  const overallScore = scoreResult.percent;
+  const overallGrade = scoreResult.grade;
+  // Single 0-100 display (e.g. "78.4"). Legacy variable name kept for
+  // minimal touch to the existing JSX.
   const avgQuestionScore =
     overallScore !== null ? overallScore.toFixed(1) : null;
+  // Suppress unused-import lint (kept exported for other consumers).
+  void getSessionOverallScore;
 
   return (
     <div className="space-y-6">
@@ -630,12 +642,12 @@ function SessionDetail({
                       </CardContent>
                     </Card>
 
-                    {/* Score card */}
+                    {/* Score card — 0-100 percentage + letter grade */}
                     {avgQuestionScore && (
                       <Card className="shrink-0 sm:w-40">
                         <CardContent className="flex h-full flex-col items-center justify-center p-5">
                           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground/60">
-                            {tt("Avg Score", "平均分")}
+                            {tt("Overall Score", "综合得分")}
                           </p>
                           <div className="relative mt-2 flex h-24 w-24 items-center justify-center">
                             <svg
@@ -656,15 +668,15 @@ function SessionDetail({
                                 r="42"
                                 fill="none"
                                 stroke={
-                                  parseFloat(avgQuestionScore) >= 7
+                                  parseFloat(avgQuestionScore) >= 70
                                     ? "hsl(142, 60%, 45%)"
-                                    : parseFloat(avgQuestionScore) >= 4
+                                    : parseFloat(avgQuestionScore) >= 40
                                       ? "hsl(24, 80%, 55%)"
                                       : "hsl(var(--destructive))"
                                 }
                                 strokeWidth="8"
                                 strokeLinecap="round"
-                                strokeDasharray={`${parseFloat(avgQuestionScore) * 10 * 2.64} 264`}
+                                strokeDasharray={`${parseFloat(avgQuestionScore) * 2.64} 264`}
                               />
                             </svg>
                             <span className="text-2xl font-bold">
@@ -672,8 +684,29 @@ function SessionDetail({
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            {tt("out of 10", "满分 10")}
+                            {tt("out of 100", "满分 100")}
                           </p>
+                          {overallGrade && (
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "mt-2 text-xs",
+                                overallGrade === "A" &&
+                                  "border-emerald-300 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+                                overallGrade === "B" &&
+                                  "border-blue-300 bg-blue-50 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
+                                overallGrade === "C" &&
+                                  "border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+                                overallGrade === "D" &&
+                                  "border-red-300 bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200",
+                              )}
+                            >
+                              {overallGrade === "A" && tt("Excellent A", "优秀 A")}
+                              {overallGrade === "B" && tt("Good B", "良好 B")}
+                              {overallGrade === "C" && tt("Fair C", "待提升 C")}
+                              {overallGrade === "D" && tt("Below D", "不通过 D")}
+                            </Badge>
+                          )}
                         </CardContent>
                       </Card>
                     )}

@@ -31,6 +31,8 @@ const questionInput = z.object({
   allowFileUpload: z.boolean().default(false),
   allowedFileTypes: z.array(z.string()).default([]),
   evaluationRubric: z.string().nullable().optional(),
+  /** Scoring weight (>0). Default 1.0; raise for core questions, lower for warm-ups. */
+  weight: z.number().positive().optional(),
 });
 
 async function verifyInterviewAccess(

@@ -25,7 +25,7 @@ export const analysisRouter = router({
       const { data: session } = await ctx.supabase
         .from("sessions")
         .select(
-          `*, interview:interviews!inner(userId, title, objective, projectId, project:projects!inner(organizationId)), messages(*)`,
+          `*, interview:interviews!inner(userId, title, objective, projectId, project:projects!inner(organizationId), questions(id, weight)), messages(*)`,
         )
         .eq("id", input.sessionId)
         .order("timestamp", { referencedTable: "messages", ascending: true })
@@ -41,7 +41,15 @@ export const analysisRouter = router({
         objective: string | null;
         projectId: string;
         project: { organizationId: string };
+        questions?: { id: string; weight?: number | string | null }[];
       };
+
+      // Build a questionId -> weight map for the scoring helper.
+      const questionWeights: Record<string, number> = {};
+      for (const q of interview.questions ?? []) {
+        const w = q.weight == null ? 1 : Number(q.weight);
+        questionWeights[q.id] = Number.isFinite(w) && w > 0 ? w : 1;
+      }
 
       const membership = await getOrgMembership(ctx.supabase, interview.project.organizationId, ctx.user.id);
       if (!membership) {
@@ -101,6 +109,7 @@ export const analysisRouter = router({
           | null,
         structuredEvaluations: (session as Record<string, unknown>)
           .questionEvaluations as unknown,
+        questionWeights,
       };
     }),
 

@@ -56,6 +56,7 @@ interface Question {
   options?: any;
   starterCode?: { language: string; code: string } | null;
   evaluationRubric?: string | null;
+  weight?: number;
   order: number;
 }
 
@@ -257,6 +258,7 @@ export function QuestionBuilder({
                       options: updated.options,
                       starterCode: updated.starterCode as { language: string; code: string } | null | undefined,
                       evaluationRubric: updated.evaluationRubric,
+                      weight: updated.weight,
                     });
                   }}
                   onCancel={() => setEditingId(null)}
@@ -299,6 +301,7 @@ export function QuestionBuilder({
                   options: data.options,
                   starterCode: data.starterCode as { language: string; code: string } | null | undefined,
                   evaluationRubric: data.evaluationRubric,
+                  weight: data.weight,
                 });
               }}
               onCancel={() => setAddingNew(false)}

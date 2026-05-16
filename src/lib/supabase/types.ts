@@ -212,6 +212,7 @@ export type Database = {
           allowFileUpload: boolean;
           allowedFileTypes: string[];
           evaluationRubric: string | null;
+          weight: number;
           createdAt: string;
           updatedAt: string;
         };
@@ -235,6 +236,7 @@ export type Database = {
           allowFileUpload?: boolean;
           allowedFileTypes?: string[];
           evaluationRubric?: string | null;
+          weight?: number;
           createdAt?: string;
           updatedAt?: string;
         };
@@ -258,6 +260,7 @@ export type Database = {
           allowFileUpload?: boolean;
           allowedFileTypes?: string[];
           evaluationRubric?: string | null;
+          weight?: number;
           createdAt?: string;
           updatedAt?: string;
         };

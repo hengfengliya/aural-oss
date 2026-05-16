@@ -144,6 +144,8 @@ export interface QuestionCardData {
   starterCode?: { language: string; code: string } | null;
   /** Markdown rubric, only used when type === "STRUCTURED_EVAL". */
   evaluationRubric?: string | null;
+  /** Scoring weight in the session overall score (>0, default 1). */
+  weight?: number;
 }
 
 interface QuestionCardProps {
@@ -452,16 +454,42 @@ export function QuestionCard({
                 </div>
               )}
 
-              {/* Required toggle */}
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={local.isRequired}
-                  onCheckedChange={(checked) => update({ isRequired: checked })}
-                  id={`required-${index}`}
-                />
-                <Label htmlFor={`required-${index}`} className="text-xs">
-                  {tt("Required", "必填")}
-                </Label>
+              {/* Required toggle + scoring weight */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={local.isRequired}
+                    onCheckedChange={(checked) => update({ isRequired: checked })}
+                    id={`required-${index}`}
+                  />
+                  <Label htmlFor={`required-${index}`} className="text-xs">
+                    {tt("Required", "必填")}
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor={`weight-${index}`} className="text-xs">
+                    {tt("Weight", "权重")}
+                  </Label>
+                  <Input
+                    id={`weight-${index}`}
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={
+                      local.weight === undefined || local.weight === null
+                        ? "1"
+                        : local.weight
+                    }
+                    onChange={(e) => {
+                      const n = parseFloat(e.target.value);
+                      update({ weight: Number.isFinite(n) && n > 0 ? n : 1 });
+                    }}
+                    className="h-8 w-20 text-sm"
+                  />
+                  <span className="text-[11px] text-muted-foreground">
+                    {tt("(1 = standard)", "（1 = 标准）")}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
