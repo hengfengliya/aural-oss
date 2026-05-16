@@ -441,6 +441,22 @@ function SessionDetail({
     ? null
     : (insightsData?.toneAnalysis ?? null);
 
+  type StructuredEvalDimension = { name: string; score: number; max: number };
+  type StructuredEvalEntry = {
+    questionId: string;
+    totalScore: number | null;
+    maxScore: number | null;
+    dimensions: StructuredEvalDimension[];
+    explanation: string;
+    rawOutput?: string;
+    notEvaluated?: boolean;
+  };
+  const structuredEvaluations: StructuredEvalEntry[] = Array.isArray(
+    (summary.data as Record<string, unknown> | undefined)?.structuredEvaluations,
+  )
+    ? ((summary.data as Record<string, unknown>).structuredEvaluations as StructuredEvalEntry[])
+    : [];
+
   const sentimentData = summary.data?.sentiment as {
     overall?: string;
     details?: string;
@@ -457,6 +473,7 @@ function SessionDetail({
     criteriaEvaluations.length > 0 ||
     questionEvaluations.length > 0 ||
     researchFindings.length > 0 ||
+    structuredEvaluations.length > 0 ||
     keyInsights.length > 0 ||
     (summary.data?.themes && summary.data.themes.length > 0)
   );
@@ -804,6 +821,78 @@ function SessionDetail({
                       <p className="text-xs text-muted-foreground">
                         {ce.reasoning}
                       </p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Structured Evaluations (per-question rubric scoring) */}
+            {structuredEvaluations.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-4 w-4" />
+                    {tt("Structured Evaluations", "专项评估")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {structuredEvaluations.map((ev, i) => (
+                    <div
+                      key={ev.questionId ?? i}
+                      className="space-y-3 rounded-lg border p-4"
+                    >
+                      {ev.notEvaluated ? (
+                        <p className="text-sm italic text-muted-foreground">
+                          {tt(
+                            "Not evaluated (candidate did not address this question).",
+                            "未评分（候选人未作答或内容无关）。",
+                          )}
+                        </p>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">
+                              {tt("Total Score", "总分")}
+                            </span>
+                            <span className="text-base font-bold">
+                              {ev.totalScore ?? "-"}
+                              {ev.maxScore !== null && ev.maxScore !== undefined
+                                ? `/${ev.maxScore}`
+                                : ""}
+                            </span>
+                          </div>
+                          {ev.maxScore && ev.maxScore > 0 && ev.totalScore !== null && (
+                            <Progress
+                              value={(ev.totalScore / ev.maxScore) * 100}
+                              className="h-2"
+                            />
+                          )}
+                          {ev.dimensions.length > 0 && (
+                            <div className="space-y-2 pt-1">
+                              {ev.dimensions.map((d, j) => (
+                                <div key={j} className="space-y-1">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span>{d.name}</span>
+                                    <span className="font-mono">
+                                      {d.score}/{d.max}
+                                    </span>
+                                  </div>
+                                  <Progress
+                                    value={d.max > 0 ? (d.score / d.max) * 100 : 0}
+                                    className="h-1.5"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {ev.explanation && (
+                            <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
+                              {ev.explanation}
+                            </p>
+                          )}
+                        </>
+                      )}
                     </div>
                   ))}
                 </CardContent>

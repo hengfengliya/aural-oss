@@ -99,6 +99,8 @@ export const analysisRouter = router({
         antiCheatingLog: (session as Record<string, unknown>).antiCheatingLog as
           | { type: string; timestamp: number; detail?: string }[]
           | null,
+        structuredEvaluations: (session as Record<string, unknown>)
+          .questionEvaluations as unknown,
       };
     }),
 

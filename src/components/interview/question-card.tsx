@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import {
   Check,
   CircleDot,
+  ClipboardCheck,
   Code2,
   GripVertical,
   ListChecks,
@@ -56,6 +57,7 @@ export const QUESTION_TYPES = [
   { value: "CODING", label: "Coding", labelZh: "编程题" },
   { value: "WHITEBOARD", label: "Whiteboard", labelZh: "白板" },
   { value: "RESEARCH", label: "Research", labelZh: "调研" },
+  { value: "STRUCTURED_EVAL", label: "Structured Eval", labelZh: "专项评估" },
 ] as const;
 
 export const QUESTION_TYPE_STYLES: Record<
@@ -118,6 +120,14 @@ export const QUESTION_TYPE_STYLES: Record<
       "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
     optionClass: "",
   },
+  STRUCTURED_EVAL: {
+    icon: ClipboardCheck,
+    label: "Structured Eval",
+    labelZh: "专项评估",
+    badgeClass:
+      "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300",
+    optionClass: "",
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -132,6 +142,8 @@ export interface QuestionCardData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: { options: string[]; allowMultiple?: boolean } | any;
   starterCode?: { language: string; code: string } | null;
+  /** Markdown rubric, only used when type === "STRUCTURED_EVAL". */
+  evaluationRubric?: string | null;
 }
 
 interface QuestionCardProps {
@@ -259,7 +271,13 @@ export function QuestionCard({
                       if (v === "MULTIPLE_CHOICE" && local.options) {
                         updates.options = { ...local.options, allowMultiple: true };
                       }
-                      if (v === "OPEN_ENDED" || v === "CODING" || v === "WHITEBOARD" || v === "RESEARCH") {
+                      if (
+                        v === "OPEN_ENDED" ||
+                        v === "CODING" ||
+                        v === "WHITEBOARD" ||
+                        v === "RESEARCH" ||
+                        v === "STRUCTURED_EVAL"
+                      ) {
                         updates.options = undefined;
                       }
                       update(updates);
@@ -404,6 +422,33 @@ export function QuestionCard({
                       autoSaveInterval={500}
                     />
                   </div>
+                </div>
+              )}
+
+              {/* Structured eval rubric editor */}
+              {local.type === "STRUCTURED_EVAL" && (
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    {tt("Evaluation Rubric (Markdown)", "评分量规（Markdown）")}
+                  </Label>
+                  <Textarea
+                    value={local.evaluationRubric ?? ""}
+                    onChange={(e) =>
+                      update({ evaluationRubric: e.target.value || null })
+                    }
+                    rows={14}
+                    className="font-mono text-xs leading-relaxed"
+                    placeholder={tt(
+                      "Paste the full rubric: dimensions, scoring brackets, pressure rules, output format, few-shot examples...",
+                      "粘贴完整量规：评分维度、各档判定标准、压分规则、输出格式、高/中/低分示例…",
+                    )}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    {tt(
+                      "After the interview, the AI evaluator scores this question against the rubric. Other question types ignore this field.",
+                      "面试结束后，AI 评估器会按这份量规独立评分。其他题型忽略此字段。",
+                    )}
+                  </p>
                 </div>
               )}
 

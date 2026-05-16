@@ -2,6 +2,11 @@ import { svgDataUrlToPng } from "@/lib/ai/convert-svg";
 import { extractJson } from "@/lib/ai/extract-json";
 import { createLogger } from "@/lib/logger";
 import { buildSummaryPrompt } from "@/lib/ai/prompts/summary";
+import {
+  buildStructuredEvalPrompt,
+  parseStructuredEvalOutput,
+  type StructuredEvalResult,
+} from "@/lib/ai/prompts/structured-eval";
 import { getProvider, REPORT_MODEL } from "@/lib/ai/registry";
 import { getAuthUser } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -21,7 +26,7 @@ export async function POST(req: Request) {
     const { data: interviewSession } = await supabaseAdmin
       .from("sessions")
       .select(
-        `*, interview:interviews!inner(title, userId, projectId, objective, language, assessmentCriteria, questions(text, order, type)), messages(*)`,
+        `*, interview:interviews!inner(title, userId, projectId, objective, language, assessmentCriteria, questions(id, text, order, type, evaluationRubric)), messages(*)`,
       )
       .eq("id", sessionId)
       .order("order", { referencedTable: "interviews.questions", ascending: true })
@@ -42,7 +47,13 @@ export async function POST(req: Request) {
       objective: string | null;
       language: string;
       assessmentCriteria: { name: string; description: string }[] | null;
-      questions: { text: string; order: number; type?: string }[];
+      questions: {
+        id: string;
+        text: string;
+        order: number;
+        type?: string;
+        evaluationRubric?: string | null;
+      }[];
     };
 
     const msgs = (interviewSession.messages ?? []) as {
@@ -158,6 +169,36 @@ export async function POST(req: Request) {
       insightsData.toneAnalysis = parsed.toneAnalysis;
     }
 
+    // ── Per-question structured evaluation ──────────────────────────
+    // For every STRUCTURED_EVAL question with a rubric, run an independent
+    // evaluator pass. Each call gets the full transcript + the question's
+    // rubric and must return strict 6-line output we then parse.
+    const structuredQuestions = (interview.questions ?? []).filter(
+      (q) => q.type === "STRUCTURED_EVAL" && (q.evaluationRubric ?? "").trim(),
+    );
+    const structuredResults: StructuredEvalResult[] = [];
+    for (const q of structuredQuestions) {
+      try {
+        const evalMessages = buildStructuredEvalPrompt({
+          interviewTitle: interview.title,
+          language: interview.language,
+          questionText: q.text,
+          rubric: q.evaluationRubric ?? "",
+          transcript: textMessages,
+        });
+        const evalResp = await provider.generateResponse({
+          messages: evalMessages,
+          temperature: 0.1,
+          maxTokens: 1024,
+          model: REPORT_MODEL,
+        });
+        const result = parseStructuredEvalOutput(evalResp.content, q.id);
+        if (result) structuredResults.push(result);
+      } catch (err) {
+        log.warn(`Structured eval failed for question ${q.id}:`, err);
+      }
+    }
+
     await supabaseAdmin
       .from("sessions")
       .update({
@@ -165,10 +206,11 @@ export async function POST(req: Request) {
         themes: (parsed.themes as string[]) ?? [],
         sentiment: parsed.sentiment ?? null,
         insights: insightsData,
+        questionEvaluations: structuredResults.length > 0 ? structuredResults : null,
       })
       .eq("id", sessionId);
 
-    return NextResponse.json(parsed);
+    return NextResponse.json({ ...parsed, structuredEvaluations: structuredResults });
   } catch (error) {
     log.error("Summary generation error:", error);
     return NextResponse.json(

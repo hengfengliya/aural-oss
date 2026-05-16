@@ -13,6 +13,7 @@ const questionInput = z.object({
     "CODING",
     "WHITEBOARD",
     "RESEARCH",
+    "STRUCTURED_EVAL",
   ]),
   options: z.any().optional(),
   starterCode: z
@@ -29,6 +30,7 @@ const questionInput = z.object({
   isRequired: z.boolean().default(true),
   allowFileUpload: z.boolean().default(false),
   allowedFileTypes: z.array(z.string()).default([]),
+  evaluationRubric: z.string().nullable().optional(),
 });
 
 async function verifyInterviewAccess(
@@ -252,6 +254,7 @@ export const questionRouter = router({
             "CODING",
             "WHITEBOARD",
             "RESEARCH",
+            "STRUCTURED_EVAL",
           ])
           .optional(),
         limit: z.number().min(1).max(200).default(200),

@@ -211,6 +211,7 @@ export type Database = {
           isRequired: boolean;
           allowFileUpload: boolean;
           allowedFileTypes: string[];
+          evaluationRubric: string | null;
           createdAt: string;
           updatedAt: string;
         };
@@ -233,6 +234,7 @@ export type Database = {
           isRequired?: boolean;
           allowFileUpload?: boolean;
           allowedFileTypes?: string[];
+          evaluationRubric?: string | null;
           createdAt?: string;
           updatedAt?: string;
         };
@@ -255,6 +257,7 @@ export type Database = {
           isRequired?: boolean;
           allowFileUpload?: boolean;
           allowedFileTypes?: string[];
+          evaluationRubric?: string | null;
           createdAt?: string;
           updatedAt?: string;
         };
@@ -283,6 +286,7 @@ export type Database = {
           audioRecordingUrl: string | null;
           audioDuration: number | null;
           screenshots: Json | null;
+          questionEvaluations: Json | null;
           createdAt: string;
           updatedAt: string;
         };
@@ -308,6 +312,7 @@ export type Database = {
           audioRecordingUrl?: string | null;
           audioDuration?: number | null;
           screenshots?: Json | null;
+          questionEvaluations?: Json | null;
           createdAt?: string;
           updatedAt?: string;
         };
@@ -333,6 +338,7 @@ export type Database = {
           audioRecordingUrl?: string | null;
           audioDuration?: number | null;
           screenshots?: Json | null;
+          questionEvaluations?: Json | null;
           createdAt?: string;
           updatedAt?: string;
         };
@@ -542,7 +548,8 @@ export type Database = {
         | "MULTIPLE_CHOICE"
         | "CODING"
         | "WHITEBOARD"
-        | "RESEARCH";
+        | "RESEARCH"
+        | "STRUCTURED_EVAL";
       SessionStatus: "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
       MessageRole: "USER" | "ASSISTANT" | "SYSTEM";
       ContentType:

@@ -55,6 +55,7 @@ interface Question {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: any;
   starterCode?: { language: string; code: string } | null;
+  evaluationRubric?: string | null;
   order: number;
 }
 
@@ -250,11 +251,12 @@ export function QuestionBuilder({
                     updateMutation.mutate({
                       id: q.id,
                       text: updated.text,
-                      type: updated.type as "OPEN_ENDED" | "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "CODING" | "WHITEBOARD" | "RESEARCH",
+                      type: updated.type as "OPEN_ENDED" | "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "CODING" | "WHITEBOARD" | "RESEARCH" | "STRUCTURED_EVAL",
                       description: updated.description as string | undefined,
                       isRequired: updated.isRequired,
                       options: updated.options,
                       starterCode: updated.starterCode as { language: string; code: string } | null | undefined,
+                      evaluationRubric: updated.evaluationRubric,
                     });
                   }}
                   onCancel={() => setEditingId(null)}
@@ -291,11 +293,12 @@ export function QuestionBuilder({
                 createMutation.mutate({
                   interviewId,
                   text: data.text,
-                  type: data.type as "OPEN_ENDED" | "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "CODING" | "WHITEBOARD" | "RESEARCH",
+                  type: data.type as "OPEN_ENDED" | "SINGLE_CHOICE" | "MULTIPLE_CHOICE" | "CODING" | "WHITEBOARD" | "RESEARCH" | "STRUCTURED_EVAL",
                   description: data.description as string | undefined,
                   isRequired: data.isRequired,
                   options: data.options,
                   starterCode: data.starterCode as { language: string; code: string } | null | undefined,
+                  evaluationRubric: data.evaluationRubric,
                 });
               }}
               onCancel={() => setAddingNew(false)}
